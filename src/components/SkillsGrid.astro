@@ -1,0 +1,102 @@
+---
+import { skillGroups } from '../data/skills';
+import { href } from '../lib/paths';
+import { slugify } from '../lib/work';
+---
+
+<ul role="list" class="skills">
+  {
+    skillGroups.map((group, i) => (
+      <li class="skill-group" data-reveal style={`--reveal-delay:${i * 0.06}s`}>
+        <p class="skill-num mono">{String(i + 1).padStart(2, '0')}</p>
+        <h4 class="skill-title">{group.discipline}</h4>
+        <p class="skill-summary">{group.summary}</p>
+        <ul role="list" class="skill-list">
+          {group.skills.map((skill) => (
+            <li>{skill}</li>
+          ))}
+        </ul>
+        <div class="skill-tools">
+          <p class="mono">Tools</p>
+          <ul role="list">
+            {group.tools.map((tool) => (
+              <li class="tag">{tool}</li>
+            ))}
+          </ul>
+        </div>
+        <a class="text-link skill-link" href={`${href('/work/')}?discipline=${slugify(group.discipline)}`}>
+          See the work<span class="visually-hidden">: {group.discipline}</span>
+          <span class="arrow" aria-hidden="true">→</span>
+        </a>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .skills {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+    gap: 0.75rem;
+  }
+
+  .skill-group {
+    display: grid;
+    grid-template-rows: auto auto auto 1fr auto auto;
+    gap: 0.8rem;
+    padding: clamp(1.25rem, 2.2vw, 1.6rem);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+
+  .skill-num {
+    font-size: var(--step--1);
+    color: var(--accent);
+  }
+
+  .skill-title {
+    font-size: var(--step-2);
+    letter-spacing: -0.025em;
+  }
+
+  .skill-summary {
+    font-size: var(--step--1);
+    color: var(--muted);
+  }
+
+  .skill-list {
+    display: grid;
+    align-content: start;
+    gap: 0.35rem;
+    padding-top: 0.5rem;
+  }
+
+  .skill-list li {
+    padding-block: 0.15rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .skill-tools {
+    display: grid;
+    gap: 0.5rem;
+    padding-top: 0.5rem;
+  }
+
+  .skill-tools .mono {
+    font-size: var(--step--2);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .skill-tools ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .skill-link {
+    font-size: var(--step--1);
+  }
+</style>

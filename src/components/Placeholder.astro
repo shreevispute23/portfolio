@@ -1,0 +1,34 @@
+---
+/**
+ * A clearly marked stand-in for information or media that has not been provided yet.
+ * Never shown when site.showPlaceholders is false.
+ */
+import { site } from '../data/site';
+
+interface Props {
+  label: string;
+  note?: string;
+  shape?: 'landscape' | 'portrait' | 'square' | 'wide';
+  inline?: boolean;
+}
+
+const { label, note, shape = 'landscape', inline = false } = Astro.props;
+---
+
+{
+  site.showPlaceholders &&
+    (inline ? (
+      <p class="placeholder-inline">
+        <span class="placeholder-tag">Placeholder</span>
+        <span>{label}</span>
+      </p>
+    ) : (
+      <div class="placeholder" data-shape={shape} role="note" aria-label={`Placeholder: ${label}`}>
+        <span class="placeholder-tag" aria-hidden="true">
+          Placeholder
+        </span>
+        <p class="placeholder-label">{label}</p>
+        {note && <p class="placeholder-note">{note}</p>}
+      </div>
+    ))
+}

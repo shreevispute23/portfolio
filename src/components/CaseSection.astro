@@ -1,0 +1,88 @@
+---
+/**
+ * A labelled text section of a case study. If there is no content, it shows a clearly marked
+ * placeholder (or nothing at all when placeholders are switched off).
+ */
+import { site } from '../data/site';
+import Placeholder from './Placeholder.astro';
+
+interface Props {
+  label: string;
+  /** Plain text content. Leave empty to show the placeholder, unless the slot has content. */
+  text?: string;
+  hasContent?: boolean;
+  missing?: string;
+}
+
+const { label, text, hasContent = Boolean(text), missing = 'Not provided yet.' } = Astro.props;
+const show = hasContent || site.showPlaceholders;
+---
+
+{
+  show && (
+    <section class="case-section" data-reveal>
+      <h2 class="case-label mono">{label}</h2>
+      <div class="case-text">
+        {hasContent ? (
+          <>
+            {text && <p>{text}</p>}
+            <slot />
+          </>
+        ) : (
+          <Placeholder label={missing} inline />
+        )}
+      </div>
+    </section>
+  )
+}
+
+<style>
+  .case-section {
+    display: grid;
+    gap: 0.75rem 2rem;
+    padding-block: 1.75rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  @media (min-width: 900px) {
+    .case-section {
+      grid-template-columns: minmax(0, 3fr) minmax(0, 9fr);
+    }
+  }
+
+  .case-label {
+    padding-top: 0.3rem;
+    font-size: var(--step--1);
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .case-text {
+    display: grid;
+    gap: 1rem;
+    max-width: 44rem;
+    font-size: var(--step-1);
+    line-height: 1.55;
+    color: var(--ink-2);
+  }
+
+  .case-text :global(ol),
+  .case-text :global(ul) {
+    display: grid;
+    gap: 0.75rem;
+    margin: 0;
+    padding-left: 1.25rem;
+  }
+
+  .case-text :global(ol li::marker) {
+    font-family: var(--mono);
+    font-size: 0.85em;
+    color: var(--accent);
+  }
+
+  .case-text :global(ul li::marker) {
+    color: var(--accent);
+  }
+</style>

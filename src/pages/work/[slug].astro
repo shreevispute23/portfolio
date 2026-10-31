@@ -1,0 +1,547 @@
+---
+import { getImage, Image } from 'astro:assets';
+import { render } from 'astro:content';
+import CaseSection from '../../components/CaseSection.astro';
+import CompanyLogo from '../../components/CompanyLogo.astro';
+import ContactBlock from '../../components/ContactBlock.astro';
+import DotField from '../../components/DotField.astro';
+import Gallery from '../../components/Gallery.astro';
+import Lightbox from '../../components/Lightbox.astro';
+import Placeholder from '../../components/Placeholder.astro';
+import { site } from '../../data/site';
+import { COMPANIES } from '../../data/taxonomy';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { href, workHref } from '../../lib/paths';
+import { disciplinesOf, getWork, indexLabel, slugify, type Work } from '../../lib/work';
+
+export async function getStaticPaths() {
+  const works = await getWork();
+  return works.map((work, i) => ({
+    params: { slug: work.id },
+    props: {
+      work,
+      number: i + 1,
+      prev: works[(i - 1 + works.length) % works.length],
+      next: works[(i + 1) % works.length],
+    },
+  }));
+}
+
+interface Props {
+  work: Work;
+  number: number;
+  prev: Work;
+  next: Work;
+}
+
+const { work, number, prev, next } = Astro.props;
+const d = work.data;
+const company = COMPANIES[d.company];
+const { Content } = await render(work);
+const hasBody = Boolean(work.body?.trim());
+const disciplines = disciplinesOf(work);
+
+const og = d.cover
+  ? await getImage({ src: d.cover, width: 1200, height: 630, fit: 'cover', format: 'jpg', quality: 82 })
+  : undefined;
+
+const companyHref = href(`/#experience-${slugify(d.company)}`);
+
+// "The brief": the marketing purpose of the piece. Missing values show a marked placeholder.
+const briefItems = [
+  { label: 'Audience', value: d.audience },
+  { label: 'Communicates', value: d.communicates },
+  { label: 'Channel', value: d.channels.length ? d.channels.join(', ') : undefined },
+  { label: 'My contribution', value: d.role },
+].filter((item) => item.value || site.showPlaceholders);
+const brief = briefItems.filter((item) => item.value);
+const pageUrl = new URL(Astro.url.pathname, Astro.site).toString();
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CreativeWork',
+  name: d.title,
+  headline: d.title,
+  description: d.summary,
+  url: pageUrl,
+  dateCreated: d.year,
+  genre: disciplines,
+  creator: { '@type': 'Person', name: site.fullName, url: new URL(href('/'), Astro.site).toString() },
+  sourceOrganization: { '@type': 'Organization', name: d.company },
+  ...(og ? { image: new URL(og.src, Astro.site).toString() } : {}),
+};
+const showTodo = site.showPlaceholders && d.todo.length > 0;
+---
+
+<BaseLayout
+  title={`${d.title}, ${d.company}`}
+  description={d.summary}
+  image={og?.src}
+  imageAlt={d.coverAlt}
+  type="article"
+  jsonLd={jsonLd}
+>
+  <article class="case" aria-labelledby="case-title" data-dotfield-host>
+    <div class="case-backdrop">
+      <DotField tone="light" fade="bottom" />
+    </div>
+    <header class="container case-head">
+      <nav class="breadcrumb mono" aria-label="Breadcrumb">
+        <ol role="list">
+          <li><a href={href('/work/')}>Work</a></li>
+          <li><a href={companyHref}>{d.company}</a></li>
+          <li aria-current="page">{d.shortTitle ?? d.title}</li>
+        </ol>
+      </nav>
+
+      <div class="case-company">
+        <CompanyLogo company={d.company} height={d.company === 'FotoOwl' ? 34 : 26} alt={`${d.company} logo`} />
+        <p class="case-company-text">
+          <span class="context-label">{company.label}</span>
+          <span class="case-company-role mono">
+            {company.role}
+            {company.period && ` · ${company.period}`}
+          </span>
+        </p>
+      </div>
+
+      <p class="eyebrow">
+        <span class="num">{indexLabel(number)}</span>
+        <span>{d.discipline}</span>
+        {d.status === 'coming-soon' && <span class="tag tag-solid">Media coming soon</span>}
+        {d.status === 'in-progress' && site.showPlaceholders && <span class="tag">More media to add</span>}
+      </p>
+      <h1 class="case-title" id="case-title" data-split>{d.title}</h1>
+      <p class="case-summary">{d.summary}</p>
+
+      <dl class="case-facts">
+        <div>
+          <dt>Company</dt>
+          <dd>{d.company}</dd>
+        </div>
+        <div>
+          <dt>Position</dt>
+          <dd>{company.role}</dd>
+        </div>
+        <div>
+          <dt>Category</dt>
+          <dd>
+            <ul role="list" class="fact-list">
+              {
+                disciplines.map((item) => (
+                  <li>
+                    <a href={`${href('/work/')}?discipline=${slugify(item)}`}>{item}</a>
+                  </li>
+                ))
+              }
+            </ul>
+          </dd>
+        </div>
+        <div>
+          <dt>Tools</dt>
+          <dd>
+            {
+              d.tools.length > 0 ? (
+                <ul role="list" class="fact-list">
+                  {d.tools.map((tool) => (
+                    <li>{tool}</li>
+                  ))}
+                </ul>
+              ) : site.showPlaceholders ? (
+                <Placeholder label="To be confirmed" inline />
+              ) : (
+                '—'
+              )
+            }
+          </dd>
+        </div>
+        <div>
+          <dt>Year</dt>
+          <dd>{d.year}</dd>
+        </div>
+      </dl>
+    </header>
+
+    <figure class="container case-cover">
+      {
+        d.cover ? (
+          <div class="media-frame" style={`view-transition-name: work-${work.id}`}>
+            <Image
+              src={d.cover}
+              alt={d.coverAlt ?? ''}
+              widths={[960, 1440, 2000]}
+              sizes="(min-width: 1440px) 1330px, 94vw"
+              quality={80}
+              loading="eager"
+              fetchpriority="high"
+              data-fade
+            />
+          </div>
+        ) : (
+          <Placeholder label="Project media coming soon" note="Samples will be added here." shape="wide" />
+        )
+      }
+    </figure>
+
+    {
+      (brief.length > 0 || site.showPlaceholders) && (
+        <section class="container case-brief" aria-labelledby="brief-title">
+          <h2 class="brief-title mono" id="brief-title">
+            The brief
+          </h2>
+          <dl class="brief-grid">
+            {briefItems.map((item) => (
+              <div class="brief-item" data-reveal>
+                <dt class="mono">{item.label}</dt>
+                <dd>{item.value ?? <Placeholder label="To be added" inline />}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      )
+    }
+
+    <div class="container case-body">
+      <CaseSection label="Overview" text={d.overview} hasContent={Boolean(d.overview) || hasBody}>
+        {hasBody && <Content />}
+      </CaseSection>
+      <CaseSection label="Objective" text={d.objective} />
+      <CaseSection label="Process" hasContent={d.process.length > 0}>
+        <ol>
+          {d.process.map((step) => <li>{step}</li>)}
+        </ol>
+      </CaseSection>
+      <CaseSection label="Final deliverables" hasContent={d.deliverables.length > 0}>
+        <ul>
+          {d.deliverables.map((item) => <li>{item}</li>)}
+        </ul>
+      </CaseSection>
+      {
+        d.links.length > 0 && (
+          <CaseSection label="Links" hasContent>
+            <ul>
+              {d.links.map((link) => (
+                <li>
+                  <a class="text-link" href={link.href} target="_blank" rel="noopener">
+                    {link.label}
+                    <span class="visually-hidden"> (opens in a new tab)</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </CaseSection>
+        )
+      }
+      {
+        showTodo && (
+          <section class="case-todo" aria-labelledby="todo-title">
+            <span class="placeholder-tag">Placeholder</span>
+            <h2 id="todo-title">Details to add</h2>
+            <p>This case study is missing the information below. Nothing here has been guessed.</p>
+            <ul>
+              {d.todo.map((item) => (
+                <li>{item}</li>
+              ))}
+            </ul>
+          </section>
+        )
+      }
+    </div>
+
+    {
+      d.gallery.length > 0 && (
+        <div class="container case-gallery">
+          <h2 class="visually-hidden">Project files</h2>
+          {d.gallery.map((section, i) => (
+            <Gallery section={section} group={`${work.id}`} headingId={`gallery-${i}`} />
+          ))}
+        </div>
+      )
+    }
+
+    <nav class="container case-pager" aria-label="More projects">
+      <a class="pager-link" href={workHref(prev.id)} rel="prev" data-astro-prefetch>
+        <span class="mono">Previous</span>
+        <span class="pager-title">
+          <span class="arrow" aria-hidden="true">←</span>
+          {prev.data.title}
+        </span>
+      </a>
+      <a class="pager-link pager-next" href={workHref(next.id)} rel="next" data-astro-prefetch>
+        <span class="mono">Next</span>
+        <span class="pager-title">
+          {next.data.title}
+          <span class="arrow" aria-hidden="true">→</span>
+        </span>
+      </a>
+    </nav>
+  </article>
+
+  <ContactBlock compact />
+  <Lightbox />
+</BaseLayout>
+
+<style>
+  .case {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .case-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: min(46rem, 90vh);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .case > :not(.case-backdrop) {
+    position: relative;
+    z-index: 1;
+  }
+
+  .case-head {
+    display: grid;
+    gap: 1.25rem;
+    padding-top: clamp(2rem, 5vw, 4rem);
+  }
+
+  .breadcrumb ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    font-size: var(--step--1);
+    color: var(--muted);
+  }
+
+  .breadcrumb li + li::before {
+    content: '/';
+    margin-right: 0.4rem;
+    color: var(--rule-strong);
+  }
+
+  .breadcrumb a {
+    text-decoration: none;
+  }
+
+  .breadcrumb a:hover {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+
+  .breadcrumb [aria-current] {
+    color: var(--ink);
+  }
+
+  .case-company {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.9rem 1.5rem;
+    width: fit-content;
+    max-width: 100%;
+    margin-block: 0.5rem 0.75rem;
+    padding: 0.9rem 1.25rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: #ffffff;
+  }
+
+  .case-company-text {
+    display: grid;
+    gap: 0.2rem;
+  }
+
+  .case-company-role {
+    font-size: var(--step--2);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .case-title {
+    max-width: 18ch;
+    font-size: var(--step-4);
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
+
+  .case-brief {
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+  }
+
+  .brief-title {
+    margin-bottom: 1rem;
+    font-size: var(--step--1);
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .brief-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+    gap: 0.75rem;
+  }
+
+  .brief-item {
+    display: grid;
+    align-content: start;
+    gap: 0.6rem;
+    padding: 1.25rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+
+  .brief-item dt {
+    font-size: var(--step--2);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .brief-item dd {
+    font-size: var(--step-0);
+    line-height: 1.5;
+    color: var(--ink);
+  }
+
+  .case-summary {
+    max-width: 44rem;
+    font-size: var(--step-2);
+    line-height: 1.35;
+    letter-spacing: -0.015em;
+    color: var(--ink-2);
+  }
+
+  .case-facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+    gap: 0;
+    margin-top: 1.5rem;
+    border-top: 1px solid var(--ink);
+  }
+
+  .case-facts > div {
+    display: grid;
+    gap: 0.4rem;
+    align-content: start;
+    padding: 1rem 1.25rem 1.25rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .case-facts dt {
+    font-family: var(--mono);
+    font-size: var(--step--2);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .case-facts dd {
+    font-weight: 500;
+  }
+
+  .fact-list {
+    display: grid;
+    gap: 0.2rem;
+  }
+
+  .fact-list a {
+    text-decoration: none;
+  }
+
+  .fact-list a:hover {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+
+  .case-cover {
+    margin-top: clamp(2rem, 4vw, 3rem);
+  }
+
+  .case-body {
+    margin-top: clamp(2.5rem, 6vw, 5rem);
+  }
+
+  .case-todo {
+    position: relative;
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1.75rem;
+    padding: 3.25rem 1.5rem 1.5rem;
+    border: 1px dashed var(--accent);
+    border-radius: var(--radius);
+    background: var(--paper);
+  }
+
+  .case-todo h2 {
+    font-size: var(--step-2);
+  }
+
+  .case-todo p {
+    color: var(--muted);
+  }
+
+  .case-todo ul {
+    display: grid;
+    gap: 0.4rem;
+    margin: 0;
+    padding-left: 1.2rem;
+  }
+
+  .case-gallery {
+    margin-top: clamp(3.5rem, 8vw, 7rem);
+  }
+
+  .case-pager {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--gap);
+    margin-block: clamp(4rem, 9vw, 8rem) clamp(3rem, 6vw, 5rem);
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--ink);
+  }
+
+  .pager-link {
+    display: grid;
+    gap: 0.5rem;
+    align-content: start;
+    text-decoration: none;
+  }
+
+  .pager-link .mono {
+    font-size: var(--step--2);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .pager-title {
+    font-size: var(--step-2);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+  }
+
+  .pager-next {
+    text-align: right;
+  }
+
+  .pager-link:hover .pager-title {
+    color: var(--accent);
+  }
+
+  .pager-link:first-child:hover .arrow {
+    transform: translateX(-4px);
+  }
+
+  @media (max-width: 640px) {
+    .pager-title {
+      font-size: var(--step-1);
+    }
+  }
+</style>

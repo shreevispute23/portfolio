@@ -1,0 +1,29 @@
+{
+  "name": "prajwal-vispute-portfolio",
+  "description": "Portfolio website of Prajwal Vispute, UI & Graphic Designer.",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "images": "node scripts/optimize-images.mjs",
+    "video": "node scripts/optimize-video.mjs",
+    "cover": "node scripts/compose-cover.mjs",
+    "covers": "node scripts/covers.mjs"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.4",
+    "astro": "^7.4.4"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "sharp": "^0.35.5",
+    "typescript": "^6.0.0"
+  },
+  "engines": {
+    "node": ">=22.23.4"
+  }
+}

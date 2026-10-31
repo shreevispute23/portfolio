@@ -1,0 +1,757 @@
+/* ==========================================================================
+   Design tokens
+   Calm off-white and ink, grey "tone" text for two-part headlines, one restrained accent.
+   The work supplies the colour.
+   ========================================================================== */
+:root {
+  color-scheme: light;
+
+  --paper: #f5f5f2;
+  --paper-2: #ebebe6;
+  --paper-3: #e1e1db;
+  --surface: #fbfbf9;
+  --ink: #171717;
+  --ink-2: #3d3d3a;
+  --muted: #6a6a64;
+  /* Second half of two-part headlines. Only for text 24px and larger (3:1 contrast). */
+  --tone: #858580;
+  --rule: #e0e0da;
+  --rule-strong: #c6c6bf;
+  --accent: #bf3f17;
+  --accent-soft: #f6e1d8;
+
+  --night: #141413;
+  --night-2: #222220;
+  --night-3: #2e2e2b;
+  --on-night: #efefea;
+  --on-night-muted: #a3a39c;
+  --on-night-tone: #7f7f79;
+  --accent-on-night: #f2683c;
+
+  --sans: var(--font-sans, system-ui, sans-serif);
+  --mono: var(--font-mono, ui-monospace, monospace);
+
+  --step--2: 0.75rem;
+  --step--1: 0.8125rem;
+  --step-0: clamp(1rem, 0.97rem + 0.15vw, 1.0625rem);
+  --step-1: clamp(1.125rem, 1.06rem + 0.3vw, 1.3125rem);
+  --step-2: clamp(1.375rem, 1.22rem + 0.75vw, 1.875rem);
+  --step-3: clamp(1.75rem, 1.45rem + 1.5vw, 2.875rem);
+  --step-4: clamp(2.25rem, 1.7rem + 2.7vw, 4.25rem);
+  --step-5: clamp(3rem, 1.2rem + 8vw, 8.75rem);
+
+  --gutter: clamp(1.25rem, 4vw, 3.5rem);
+  --max: 1440px;
+  --gap: clamp(1rem, 1.8vw, 1.5rem);
+  --section: clamp(4.5rem, 9vw, 8rem);
+  --radius-sm: 6px;
+  --radius: 12px;
+  --radius-lg: 20px;
+  --header-h: 4.5rem;
+  --ease: cubic-bezier(0.22, 0.7, 0.12, 1);
+  --shadow-soft: 0 1px 2px rgba(23, 23, 23, 0.05), 0 14px 36px -20px rgba(23, 23, 23, 0.22);
+  --shadow-lift: 0 2px 4px rgba(23, 23, 23, 0.06), 0 24px 48px -24px rgba(23, 23, 23, 0.3);
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-top: calc(var(--header-h) + 1rem);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+html:has(dialog[open]),
+html.menu-open {
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: var(--step-0);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+figure,
+blockquote,
+dl,
+dd {
+  margin: 0;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+p,
+li,
+dd {
+  text-wrap: pretty;
+}
+
+ul[role='list'],
+ol[role='list'] {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+img,
+video,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+img {
+  height: auto;
+}
+
+a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+::selection {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+main:focus {
+  outline: none;
+}
+
+.skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 100;
+  padding: 0.65rem 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--ink);
+  color: var(--paper);
+  font-size: var(--step--1);
+  text-decoration: none;
+  transform: translateY(-160%);
+  transition: transform 0.2s var(--ease);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ==========================================================================
+   Layout
+   ========================================================================== */
+.container {
+  width: 100%;
+  max-width: var(--max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.section {
+  padding-block: var(--section);
+}
+
+.section-head {
+  display: grid;
+  gap: 1.25rem 2rem;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  align-items: end;
+  margin-bottom: clamp(2.5rem, 5vw, 4rem);
+}
+
+.section-head > .eyebrow {
+  grid-column: 1 / -1;
+}
+
+.section-title {
+  grid-column: 1 / -1;
+  font-size: var(--step-4);
+  letter-spacing: -0.035em;
+}
+
+.section-intro {
+  grid-column: 1 / -1;
+  max-width: 38rem;
+  color: var(--ink-2);
+  font-size: var(--step-1);
+  line-height: 1.5;
+}
+
+.section-aside {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 960px) {
+  .section-title {
+    grid-column: 1 / span 7;
+  }
+
+  .section-intro,
+  .section-aside {
+    grid-column: 8 / span 5;
+  }
+}
+
+/* ==========================================================================
+   Type utilities
+   ========================================================================== */
+.tone {
+  color: var(--tone);
+}
+
+.eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.6rem;
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.eyebrow .num {
+  color: var(--accent);
+}
+
+.mono {
+  font-family: var(--mono);
+  letter-spacing: 0.01em;
+}
+
+.lede {
+  font-size: var(--step-1);
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: var(--rule-strong);
+  transition:
+    text-decoration-color 0.2s var(--ease),
+    color 0.2s var(--ease);
+}
+
+.text-link:hover {
+  color: var(--accent);
+  text-decoration-color: currentColor;
+}
+
+.arrow {
+  display: inline-block;
+  transition: transform 0.25s var(--ease);
+}
+
+a:hover > .arrow,
+a:focus-visible > .arrow {
+  transform: translateX(4px);
+}
+
+/* ==========================================================================
+   Surfaces
+   ========================================================================== */
+.grid-paper {
+  background-color: var(--paper-2);
+  background-image:
+    linear-gradient(rgba(23, 23, 23, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(23, 23, 23, 0.045) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-position: -1px -1px;
+}
+
+.soft-card {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+/* ==========================================================================
+   Buttons, tags, labels
+   ========================================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6em;
+  min-height: 2.9rem;
+  padding: 0.7rem 1.25rem;
+  border: 1px solid var(--ink);
+  border-radius: 10px;
+  font-size: var(--step-0);
+  font-weight: 500;
+  line-height: 1.1;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 0.25s var(--ease),
+    color 0.25s var(--ease),
+    border-color 0.25s var(--ease),
+    box-shadow 0.25s var(--ease);
+}
+
+.btn-primary {
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.12) inset, 0 6px 16px -8px rgba(23, 23, 23, 0.6);
+}
+
+.btn-primary:hover {
+  background: #000;
+}
+
+.btn-ghost {
+  border-color: var(--rule-strong);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.btn-ghost:hover {
+  border-color: var(--ink);
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--rule-strong);
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: var(--step--2);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.tag-solid {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
+.tag-light {
+  background: rgba(251, 251, 249, 0.94);
+  border-color: transparent;
+  color: var(--ink);
+}
+
+.context-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  color: var(--ink-2);
+}
+
+.context-label::before {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  background: var(--accent);
+  border-radius: 50%;
+  flex: none;
+}
+
+/* ==========================================================================
+   Placeholders: clearly marked stand-ins for missing information or media
+   ========================================================================== */
+.placeholder {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  min-height: 12rem;
+  padding: 1.25rem;
+  border: 1px dashed var(--rule-strong);
+  border-radius: var(--radius);
+  background:
+    repeating-linear-gradient(-45deg, transparent 0 11px, rgba(23, 23, 23, 0.035) 11px 12px),
+    var(--paper-2);
+  color: var(--ink-2);
+}
+
+.placeholder[data-shape='portrait'] {
+  aspect-ratio: 9 / 16;
+}
+
+.placeholder[data-shape='square'] {
+  aspect-ratio: 1;
+}
+
+.placeholder[data-shape='landscape'] {
+  aspect-ratio: 16 / 10;
+}
+
+.placeholder[data-shape='wide'] {
+  aspect-ratio: 21 / 8;
+  min-height: 10rem;
+}
+
+.placeholder-tag {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: var(--step--2);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--paper);
+}
+
+.placeholder-label {
+  font-weight: 600;
+  font-size: var(--step-1);
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+.placeholder-note {
+  max-width: 34rem;
+  font-size: var(--step--1);
+  color: var(--muted);
+}
+
+.placeholder-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  color: var(--muted);
+}
+
+.placeholder-inline .placeholder-tag {
+  position: static;
+}
+
+/* ==========================================================================
+   Media frames (image loading state, broken state)
+   ========================================================================== */
+.media-frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--paper-2);
+}
+
+.media-frame img {
+  width: 100%;
+  height: auto;
+}
+
+.js img[data-fade] {
+  opacity: 0;
+  transition: opacity 0.6s var(--ease);
+}
+
+.js img[data-fade].is-loaded {
+  opacity: 1;
+}
+
+.media-frame.is-broken::after {
+  content: 'Image unavailable';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  color: var(--muted);
+}
+
+/* ==========================================================================
+   Scroll reveal (progressive enhancement; content is visible without JS)
+   ========================================================================== */
+.js [data-reveal] {
+  opacity: 0;
+  transform: translateY(1.25rem);
+  transition:
+    opacity 0.9s var(--ease),
+    transform 0.9s var(--ease);
+  transition-delay: var(--reveal-delay, 0s);
+}
+
+.js [data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Headline words slide up from behind a mask, one after another. */
+.split-w {
+  display: inline-block;
+  overflow: clip;
+  overflow-clip-margin: 0.12em;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+  vertical-align: top;
+}
+
+.split-i {
+  display: inline-block;
+}
+
+.js [data-split] .split-i {
+  transform: translateY(108%);
+  transition: transform 1s var(--ease);
+  transition-delay: calc(var(--split-delay, 0s) + min(var(--i, 0), 18) * 0.045s);
+}
+
+.js [data-split].is-visible .split-i {
+  transform: none;
+}
+
+/* Image frames open from a smaller rounded mask while the image settles. */
+.js [data-mask] {
+  clip-path: inset(7% 5% 7% 5% round var(--radius-lg));
+  transition: clip-path 1.2s var(--ease);
+}
+
+.js [data-mask] img {
+  scale: 1.1;
+  transition:
+    scale 1.6s var(--ease),
+    opacity 0.6s var(--ease),
+    transform 0.9s var(--ease);
+}
+
+.js [data-mask].is-visible {
+  clip-path: inset(0 0 0 0 round var(--radius-lg));
+}
+
+.js [data-mask].mask-done {
+  clip-path: none;
+}
+
+.js [data-mask].is-visible img {
+  scale: 1;
+}
+
+/* Buttons that ease toward the pointer. */
+[data-magnetic] {
+  transition:
+    translate 0.45s var(--ease),
+    background-color 0.25s var(--ease),
+    color 0.25s var(--ease),
+    border-color 0.25s var(--ease),
+    box-shadow 0.25s var(--ease);
+}
+
+/* Reading progress along the top of the page (browsers with scroll-driven animations). */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  height: 2px;
+  background: var(--accent);
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  pointer-events: none;
+}
+
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .scroll-progress {
+      animation: grow-progress linear both;
+      animation-timeline: scroll(root block);
+    }
+
+    /* Project images drift inside their frames as they pass through the viewport.
+       The image is 10% taller than its frame so the drift never shows an edge. */
+    [data-parallax] img {
+      position: relative;
+      top: -5%;
+      height: 110% !important;
+      animation: parallax-drift linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+  }
+}
+
+@keyframes grow-progress {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes parallax-drift {
+  from {
+    translate: 0 -3.5%;
+  }
+  to {
+    translate: 0 3.5%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .js img[data-fade] {
+    opacity: 1;
+    transition: none;
+  }
+
+  .js [data-split] .split-i {
+    transform: none;
+    transition: none;
+  }
+
+  .js [data-mask],
+  .js [data-mask] img {
+    clip-path: none;
+    scale: 1;
+    transition: none;
+  }
+
+  .scroll-progress {
+    display: none;
+  }
+}
+
+/* Cross-page transitions in browsers that support them. Project covers morph between the
+   card and the case study through matching view-transition-name values. */
+@view-transition {
+  navigation: auto;
+}
+
+/* The header stays put while the page content fades out and the next page rises in. */
+.site-header {
+  view-transition-name: site-header;
+}
+
+::view-transition-old(root) {
+  animation: 0.25s var(--ease) both page-out;
+}
+
+::view-transition-new(root) {
+  animation: 0.5s var(--ease) 0.05s both page-in;
+}
+
+@keyframes page-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    translate: 0 14px;
+  }
+}
+
+::view-transition-group(*) {
+  animation-duration: 0.45s;
+  animation-timing-function: var(--ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+@media print {
+  .site-header,
+  .skip-link,
+  .lightbox,
+  .menu-toggle {
+    display: none !important;
+  }
+
+  [data-reveal],
+  img[data-fade],
+  .split-i {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  [data-mask],
+  [data-mask] img {
+    clip-path: none !important;
+    scale: 1 !important;
+  }
+
+  .scroll-progress {
+    display: none !important;
+  }
+}

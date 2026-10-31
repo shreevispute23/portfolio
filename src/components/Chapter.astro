@@ -1,0 +1,575 @@
+---
+/**
+ * A discipline chapter: numbered, expandable rows (what each piece communicated, where it ran,
+ * my part) next to a preview panel that shows the row being read or hovered.
+ * Rows use <details>, so they work with keyboard and without JavaScript.
+ */
+import { getEntry } from 'astro:content';
+import { getImage, Image } from 'astro:assets';
+import type { Chapter } from '../data/chapters';
+import { site } from '../data/site';
+import { workHref } from '../lib/paths';
+
+interface Props {
+  chapter: Chapter;
+}
+
+const { chapter } = Astro.props;
+const major = chapter.number.split('.')[0];
+
+const resolved = await Promise.all(
+  chapter.rows.map(async (row) => {
+    const work = await getEntry('work', row.project);
+    if (!work || work.data.draft) return null;
+    if (!site.showPlaceholders && work.data.status === 'coming-soon') return null;
+    const d = work.data;
+    const preview = row.preview ?? d.cover;
+    const stage = preview
+      ? await getImage({ src: preview, widths: [560, 840, 1200], format: 'webp', quality: 78 })
+      : undefined;
+    return {
+      title: row.title ?? d.shortTitle ?? d.title,
+      company: d.company,
+      status: d.status,
+      href: `${workHref(work.id)}${row.anchor ? `#${row.anchor}` : ''}`,
+      communicates: row.communicates ?? d.communicates,
+      channel: row.channel ?? (d.channels.length ? d.channels.join(', ') : undefined),
+      role: row.role ?? d.role,
+      preview,
+      previewAlt: preview === d.cover ? (d.coverAlt ?? '') : '',
+      stage,
+      caption: `${d.company} · ${row.title ?? d.shortTitle ?? d.title}`,
+    };
+  }),
+);
+const rows = resolved.filter((r): r is NonNullable<typeof r> => r !== null);
+const stageSizes = '(min-width: 1440px) 640px, 44vw';
+---
+
+<section class="chapter section" id={chapter.id} aria-labelledby={`${chapter.id}-title`} data-chapter>
+  <div class="container chapter-grid">
+    <div class="chapter-copy">
+      <p class="eyebrow" data-reveal><span class="num">{chapter.number}</span> — {chapter.label}</p>
+      <h2 class="chapter-title" id={`${chapter.id}-title`} data-split>
+        {chapter.title} <span class="tone">{chapter.tone}</span>
+      </h2>
+      <p class="chapter-intro" data-reveal>{chapter.intro}</p>
+
+      <div class="rows" data-rows>
+        {
+          rows.map((row, i) => (
+            <details
+              class="row"
+              name={`chapter-${chapter.id}`}
+              open={i === 0}
+              data-row={i}
+              data-caption={row.caption}
+              data-reveal
+              style={`--reveal-delay:${Math.min(i, 6) * 0.06}s`}
+            >
+              <summary class="row-summary">
+                <span class="row-num mono">
+                  {major}.{i + 1}
+                </span>
+                <span class="row-title">
+                  {row.title}
+                  {row.status === 'coming-soon' && <span class="tag">Coming soon</span>}
+                </span>
+                <span class="row-company mono">{row.company}</span>
+                <span class="row-icon" aria-hidden="true" />
+              </summary>
+              <div class="row-body">
+                {row.preview && (
+                  <div class="row-thumb media-frame">
+                    <Image
+                      src={row.preview}
+                      alt={row.previewAlt}
+                      widths={[480, 720, 960]}
+                      sizes="94vw"
+                      quality={74}
+                      loading="lazy"
+                    />
+                  </div>
+                )}
+                <dl class="row-facts">
+                  <div>
+                    <dt>Communicates</dt>
+                    <dd>{row.communicates ?? 'To be added.'}</dd>
+                  </div>
+                  <div>
+                    <dt>Channel</dt>
+                    <dd>{row.channel ?? 'To be added.'}</dd>
+                  </div>
+                  <div>
+                    <dt>My part</dt>
+                    <dd>{row.role ?? 'To be added.'}</dd>
+                  </div>
+                </dl>
+                <a class="text-link row-link" href={row.href} data-astro-prefetch>
+                  {row.status === 'coming-soon' ? 'See what’s planned' : 'Open case study'}
+                  <span class="visually-hidden">: {row.title}</span>
+                  <span class="arrow" aria-hidden="true">
+                    →
+                  </span>
+                </a>
+              </div>
+            </details>
+          ))
+        }
+      </div>
+
+      {
+        chapter.facts && (
+          <ul role="list" class="facts" aria-label="Scope of the work">
+            {chapter.facts.map((fact) => (
+              <li class="fact" data-reveal>
+                <span class="fact-value" data-count>
+                  {fact.value}
+                </span>
+                <span class="fact-label">{fact.label}</span>
+                <span class="fact-where mono">{fact.where}</span>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+
+      {
+        chapter.toolGroups && (
+          <div class="tools" data-reveal>
+            {chapter.toolGroups.map((group) => (
+              <div class="tool-group">
+                <p class="tool-label mono">{group.label}</p>
+                <ul role="list" class="tool-list">
+                  {group.tools.map((tool) => (
+                    <li class="tag">{tool}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        )
+      }
+    </div>
+
+    <div class="chapter-stage" aria-hidden="true">
+      <div class="stage-frame grid-paper" data-mask>
+        {
+          rows.map((row, i) =>
+            row.stage ? (
+              <img
+                class:list={['stage-img', { 'is-active': i === 0 }]}
+                data-stage-img={i}
+                alt=""
+                decoding="async"
+                {...(i === 0
+                  ? { src: row.stage.src, srcset: row.stage.srcSet.attribute, sizes: stageSizes, loading: 'lazy' }
+                  : { 'data-src': row.stage.src, 'data-srcset': row.stage.srcSet.attribute, 'data-sizes': stageSizes })}
+              />
+            ) : (
+              <div class:list={['stage-img stage-empty', { 'is-active': i === 0 }]} data-stage-img={i}>
+                <span class="mono">Samples coming soon</span>
+              </div>
+            ),
+          )
+        }
+      </div>
+      <p class="stage-caption mono" data-stage-caption>{rows[0]?.caption}</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .chapter {
+    border-top: 1px solid var(--rule);
+  }
+
+  .chapter-grid {
+    display: grid;
+    gap: 2.5rem clamp(2rem, 5vw, 5rem);
+  }
+
+  @media (min-width: 960px) {
+    .chapter-grid {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+      align-items: start;
+    }
+
+    #marketing .chapter-grid {
+      grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+    }
+
+    #marketing .chapter-stage {
+      order: -1;
+    }
+  }
+
+  .chapter-copy {
+    display: grid;
+    gap: 1.25rem;
+    align-content: start;
+  }
+
+  .chapter-title {
+    font-size: var(--step-4);
+    letter-spacing: -0.035em;
+  }
+
+  .chapter-intro {
+    max-width: 34rem;
+    font-size: var(--step-1);
+    line-height: 1.5;
+    color: var(--ink-2);
+  }
+
+  /* Rows */
+  .rows {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+
+  .row {
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    background: var(--surface);
+    transition:
+      border-color 0.25s var(--ease),
+      box-shadow 0.25s var(--ease);
+  }
+
+  .row:hover,
+  .row[open] {
+    border-color: var(--rule-strong);
+  }
+
+  .row[open] {
+    box-shadow: var(--shadow-soft);
+  }
+
+  .row-summary {
+    display: grid;
+    grid-template-columns: 2.25rem minmax(0, 1fr) auto 1.25rem;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 3.25rem;
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .row-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .row-summary:focus-visible {
+    outline-offset: -2px;
+    border-radius: 10px;
+  }
+
+  .row-num {
+    font-size: var(--step--1);
+    color: var(--muted);
+  }
+
+  .row[open] .row-num {
+    color: var(--accent);
+  }
+
+  .row-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.6rem;
+    font-weight: 500;
+    line-height: 1.3;
+  }
+
+  .row-company {
+    font-size: var(--step--2);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .row-icon {
+    position: relative;
+    width: 0.8rem;
+    height: 0.8rem;
+    justify-self: end;
+  }
+
+  .row-icon::before,
+  .row-icon::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 1.5px;
+    margin-top: -0.75px;
+    background: var(--ink-2);
+    transition: transform 0.3s var(--ease);
+  }
+
+  .row-icon::after {
+    transform: rotate(90deg);
+  }
+
+  .row[open] .row-icon::after {
+    transform: rotate(0deg);
+  }
+
+  .row-body {
+    display: grid;
+    gap: 1rem;
+    padding: 0.25rem 1rem 1.1rem 4rem;
+  }
+
+  .row-thumb {
+    display: none;
+    aspect-ratio: 3 / 2;
+  }
+
+  .row-thumb :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .row-facts {
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .row-facts > div {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    gap: 1rem;
+  }
+
+  .row-facts dt {
+    padding-top: 0.15rem;
+    font-family: var(--mono);
+    font-size: var(--step--2);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .row-facts dd {
+    font-size: var(--step--1);
+    line-height: 1.5;
+    color: var(--ink-2);
+  }
+
+  .row-link {
+    justify-self: start;
+    font-size: var(--step--1);
+  }
+
+  @media (max-width: 959px) {
+    .row-thumb {
+      display: block;
+    }
+
+    .row-body {
+      padding-left: 1rem;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .row-summary {
+      grid-template-columns: 2rem minmax(0, 1fr) 1rem;
+    }
+
+    .row-company {
+      display: none;
+    }
+
+    .row-facts > div {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.15rem;
+    }
+  }
+
+  /* Scope facts */
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+
+  .fact {
+    display: grid;
+    align-content: start;
+    gap: 0.35rem;
+    padding: 1rem;
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    background: var(--surface);
+  }
+
+  .fact-value {
+    font-size: var(--step-2);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  .fact-label {
+    font-size: var(--step--1);
+    line-height: 1.45;
+    color: var(--ink-2);
+  }
+
+  .fact-where {
+    font-size: var(--step--2);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* Tools */
+  .tools {
+    display: grid;
+    gap: 0.9rem;
+    margin-top: 0.75rem;
+  }
+
+  .tool-group {
+    display: grid;
+    gap: 0.45rem;
+  }
+
+  .tool-label {
+    font-size: var(--step--2);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .tool-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  /* Preview panel */
+  .chapter-stage {
+    display: none;
+  }
+
+  @media (min-width: 960px) {
+    .chapter-stage {
+      position: sticky;
+      top: calc(var(--header-h) + 1.5rem);
+      display: grid;
+      gap: 0.75rem;
+    }
+  }
+
+  .stage-frame {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-lg);
+  }
+
+  .stage-img {
+    position: absolute;
+    inset: 6%;
+    width: 88%;
+    height: 88%;
+    object-fit: contain;
+    opacity: 0;
+    transform: scale(0.985);
+    transition:
+      opacity 0.45s var(--ease),
+      transform 0.6s var(--ease);
+  }
+
+  .stage-img.is-active {
+    opacity: 1;
+    transform: none;
+  }
+
+  .stage-empty {
+    display: grid;
+    place-items: center;
+    border: 1px dashed var(--rule-strong);
+    border-radius: var(--radius);
+    background:
+      repeating-linear-gradient(-45deg, transparent 0 11px, rgba(23, 23, 23, 0.035) 11px 12px),
+      var(--paper);
+    color: var(--muted);
+    font-size: var(--step--1);
+  }
+
+  .stage-caption {
+    font-size: var(--step--2);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stage-img {
+      transition: none;
+      transform: none;
+    }
+  }
+</style>
+
+<script>
+  const fine = window.matchMedia('(hover: hover) and (pointer: fine)');
+
+  document.querySelectorAll<HTMLElement>('[data-chapter]').forEach((chapter) => {
+    const rows = [...chapter.querySelectorAll<HTMLDetailsElement>('details[data-row]')];
+    const images = [...chapter.querySelectorAll<HTMLElement>('[data-stage-img]')];
+    const caption = chapter.querySelector<HTMLElement>('[data-stage-caption]');
+    const list = chapter.querySelector<HTMLElement>('[data-rows]');
+    let current = Math.max(0, rows.findIndex((row) => row.open));
+
+    const load = (el: HTMLElement) => {
+      if (!(el instanceof HTMLImageElement) || el.getAttribute('src')) return;
+      if (el.dataset.sizes) el.sizes = el.dataset.sizes;
+      if (el.dataset.srcset) el.srcset = el.dataset.srcset;
+      if (el.dataset.src) el.src = el.dataset.src;
+    };
+
+    const show = (index: number) => {
+      images.forEach((el, i) => {
+        if (i === index) load(el);
+        el.classList.toggle('is-active', i === index);
+      });
+      if (caption) caption.textContent = rows[index]?.dataset.caption ?? '';
+    };
+
+    rows.forEach((row, index) => {
+      row.addEventListener('toggle', () => {
+        if (!row.open) return;
+        current = index;
+        // Older browsers ignore the shared `name`; keep one row open at a time.
+        rows.forEach((other) => {
+          if (other !== row && other.open) other.open = false;
+        });
+        show(index);
+      });
+      const summary = row.querySelector('summary');
+      summary?.addEventListener('pointerenter', () => {
+        if (fine.matches) {
+          show(index);
+          // Warm the next image so it is ready when needed.
+          const next = images[index + 1];
+          if (next) load(next);
+        }
+      });
+      summary?.addEventListener('focus', () => show(index));
+    });
+
+    list?.addEventListener('pointerleave', () => show(current));
+  });
+</script>

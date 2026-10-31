@@ -1,0 +1,374 @@
+---
+/**
+ * Numbered list of projects. On devices with a mouse, a preview of the hovered project
+ * follows the pointer; on touch screens each row shows a small thumbnail instead.
+ */
+import { Image } from 'astro:assets';
+import { workHref } from '../lib/paths';
+import { indexLabel, type Work } from '../lib/work';
+
+interface Props {
+  items: Work[];
+  /** Number of the first item (to match its position in the full list). */
+  start?: number;
+  /** 'dark' for use on the night background. */
+  tone?: 'light' | 'dark';
+  /** Smaller rows, for use inside another section. */
+  compact?: boolean;
+}
+
+const { items, start = 1, tone = 'light', compact = false } = Astro.props;
+---
+
+<div
+  class:list={['project-index', `project-index--${tone}`, { 'project-index--compact': compact }]}
+  data-project-index
+>
+  <ol role="list" class="index-list">
+    {
+      items.map((work, i) => (
+        <li class="index-row" data-index-row={i} data-reveal style={`--reveal-delay:${Math.min(i, 6) * 0.05}s`}>
+          <a class="index-link" href={workHref(work.id)} data-astro-prefetch>
+            <span class="index-num mono">{indexLabel(start + i)}</span>
+            <span class="index-thumb media-frame" aria-hidden="true">
+              {work.data.cover ? (
+                <Image src={work.data.cover} alt="" widths={[240, 480]} sizes="120px" quality={70} loading="lazy" />
+              ) : (
+                <span class="index-thumb-empty" />
+              )}
+            </span>
+            <span class="index-title">
+              {work.data.title}
+              {work.data.status === 'coming-soon' && <span class="tag">Coming soon</span>}
+            </span>
+            <span class="index-discipline mono">{work.data.discipline}</span>
+            <span class="index-deliverable">{work.data.deliverables[0] ?? 'Details to add'}</span>
+            <span class="index-arrow" aria-hidden="true">
+              →
+            </span>
+          </a>
+        </li>
+      ))
+    }
+  </ol>
+
+  <div class="index-preview" aria-hidden="true" data-index-preview>
+    {
+      items.map((work, i) =>
+        work.data.cover ? (
+          <Image
+            src={work.data.cover}
+            alt=""
+            widths={[480, 800]}
+            sizes="400px"
+            quality={74}
+            loading="lazy"
+            data-preview={i}
+          />
+        ) : (
+          <span class="index-preview-empty mono" data-preview={i}>
+            Media coming soon
+          </span>
+        ),
+      )
+    }
+  </div>
+</div>
+
+<style>
+  .project-index {
+    position: relative;
+  }
+
+  .index-list {
+    border-top: 1px solid var(--ink);
+  }
+
+  .index-row {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .index-link {
+    display: grid;
+    grid-template-columns: 3rem 1fr auto;
+    align-items: center;
+    gap: 0.5rem 1.25rem;
+    padding-block: 1.25rem;
+    text-decoration: none;
+    transition:
+      color 0.25s var(--ease),
+      padding 0.4s var(--ease);
+  }
+
+  .index-num {
+    font-size: var(--step--1);
+    color: var(--accent);
+  }
+
+  .index-thumb {
+    display: none;
+  }
+
+  .index-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.75rem;
+    font-size: var(--step-2);
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+  }
+
+  .index-discipline,
+  .index-deliverable {
+    display: none;
+    font-size: var(--step--1);
+    color: var(--muted);
+  }
+
+  .index-discipline {
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  .index-arrow {
+    font-size: var(--step-1);
+    transition: transform 0.3s var(--ease);
+  }
+
+  .index-link:hover,
+  .index-link:focus-visible {
+    color: var(--accent);
+  }
+
+  .index-link:hover .index-arrow,
+  .index-link:focus-visible .index-arrow {
+    transform: translateX(6px);
+  }
+
+  @media (min-width: 900px) {
+    .index-link {
+      grid-template-columns: 4rem minmax(0, 1.6fr) minmax(0, 0.9fr) minmax(0, 1.1fr) 2rem;
+      padding-block: 1.6rem;
+    }
+
+    .index-discipline,
+    .index-deliverable {
+      display: block;
+    }
+  }
+
+  /* Touch screens and small windows: inline thumbnails instead of the floating preview. */
+  @media (hover: none), (max-width: 899px) {
+    .index-link {
+      grid-template-columns: 2.25rem 5.5rem 1fr auto;
+    }
+
+    .index-thumb {
+      display: block;
+      width: 5.5rem;
+      aspect-ratio: 3 / 2;
+    }
+
+    .index-thumb :global(img),
+    .index-thumb-empty {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .index-title {
+      font-size: var(--step-1);
+    }
+
+    .index-preview {
+      display: none;
+    }
+  }
+
+  @media (hover: none) and (min-width: 900px) {
+    .index-link {
+      grid-template-columns: 4rem 7rem minmax(0, 1.6fr) minmax(0, 0.9fr) minmax(0, 1.1fr) 2rem;
+    }
+
+    .index-thumb {
+      width: 7rem;
+    }
+  }
+
+  .index-preview {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 20;
+    width: clamp(16rem, 24vw, 24rem);
+    aspect-ratio: 3 / 2;
+    overflow: hidden;
+    border-radius: var(--radius);
+    background: var(--paper-2);
+    box-shadow: 0 1.5rem 3rem -1rem rgba(20, 20, 20, 0.35);
+    pointer-events: none;
+    opacity: 0;
+    transform: translate3d(var(--x, -999px), var(--y, -999px), 0) scale(0.92);
+    transition:
+      opacity 0.25s var(--ease),
+      transform 0.25s var(--ease);
+  }
+
+  .index-preview.is-active {
+    opacity: 1;
+    transform: translate3d(var(--x, -999px), var(--y, -999px), 0) scale(1);
+  }
+
+  .index-preview :global([data-preview]) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.2s var(--ease);
+  }
+
+  .index-preview :global([data-preview].is-current) {
+    opacity: 1;
+  }
+
+  .index-preview-empty {
+    display: grid;
+    place-items: center;
+    font-size: var(--step--1);
+    color: var(--muted);
+    background:
+      repeating-linear-gradient(-45deg, transparent 0 11px, rgba(20, 20, 20, 0.04) 11px 12px),
+      var(--paper-2);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .index-preview {
+      transition: opacity 0.2s linear;
+      transform: translate3d(var(--x, -999px), var(--y, -999px), 0);
+    }
+
+    .index-preview.is-active {
+      transform: translate3d(var(--x, -999px), var(--y, -999px), 0);
+    }
+  }
+
+  /* Compact rows (inside the experience section) */
+  .project-index--compact .index-link {
+    padding-block: 0.85rem;
+  }
+
+  .project-index--compact .index-title {
+    font-size: var(--step-1);
+    font-weight: 500;
+  }
+
+  @media (min-width: 900px) {
+    .project-index--compact .index-link {
+      grid-template-columns: 3rem minmax(0, 1.5fr) minmax(0, 1fr) 2rem;
+      padding-block: 1rem;
+    }
+
+    .project-index--compact .index-deliverable {
+      display: none;
+    }
+  }
+
+  @media (hover: none) and (min-width: 900px) {
+    .project-index--compact .index-link {
+      grid-template-columns: 3rem 5.5rem minmax(0, 1.5fr) minmax(0, 1fr) 2rem;
+    }
+
+    .project-index--compact .index-thumb {
+      width: 5.5rem;
+    }
+  }
+
+  /* Dark surface */
+  .project-index--dark .index-list {
+    border-top-color: rgba(239, 239, 234, 0.4);
+  }
+
+  .project-index--dark .index-row {
+    border-bottom-color: rgba(239, 239, 234, 0.14);
+  }
+
+  .project-index--dark .index-link {
+    color: var(--on-night);
+  }
+
+  .project-index--dark .index-num {
+    color: var(--accent-on-night);
+  }
+
+  .project-index--dark .index-discipline,
+  .project-index--dark .index-deliverable {
+    color: var(--on-night-muted);
+  }
+
+  .project-index--dark .index-link:hover,
+  .project-index--dark .index-link:focus-visible {
+    color: var(--accent-on-night);
+  }
+
+  .project-index--dark :focus-visible {
+    outline-color: var(--accent-on-night);
+  }
+
+  .project-index--dark .index-thumb,
+  .project-index--dark .index-preview {
+    background: var(--night-3);
+  }
+
+  .project-index--dark :global(.tag) {
+    border-color: rgba(239, 239, 234, 0.4);
+    color: var(--on-night);
+  }
+</style>
+
+<script>
+  const fine = window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 900px)');
+
+  document.querySelectorAll<HTMLElement>('[data-project-index]').forEach((root) => {
+    const preview = root.querySelector<HTMLElement>('[data-index-preview]');
+    if (!preview) return;
+    const frames = preview.querySelectorAll<HTMLElement>('[data-preview]');
+    let frame = 0;
+    let x = 0;
+    let y = 0;
+
+    const place = () => {
+      frame = 0;
+      const w = preview.offsetWidth;
+      const h = preview.offsetHeight;
+      // Keep the preview inside the window, offset from the pointer.
+      const px = Math.min(window.innerWidth - w - 16, x + 28);
+      const py = Math.min(window.innerHeight - h - 16, Math.max(16, y - h / 2));
+      preview.style.setProperty('--x', `${px}px`);
+      preview.style.setProperty('--y', `${py}px`);
+    };
+
+    root.querySelectorAll<HTMLElement>('[data-index-row]').forEach((row) => {
+      const show = () => {
+        if (!fine.matches) return;
+        const id = row.dataset.indexRow;
+        frames.forEach((f) => f.classList.toggle('is-current', f.dataset.preview === id));
+        preview.classList.add('is-active');
+      };
+      row.addEventListener('pointerenter', show);
+      row.addEventListener('pointerleave', () => preview.classList.remove('is-active'));
+    });
+
+    root.addEventListener('pointermove', (event) => {
+      if (!fine.matches) return;
+      x = event.clientX;
+      y = event.clientY;
+      if (!frame) frame = requestAnimationFrame(place);
+    });
+    window.addEventListener('scroll', () => preview.classList.remove('is-active'), { passive: true });
+  });
+</script>

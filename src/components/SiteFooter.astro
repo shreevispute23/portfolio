@@ -1,0 +1,89 @@
+---
+import { site } from '../data/site';
+import { href } from '../lib/paths';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <p class="footer-name">
+      <span>{site.name}</span>
+      <span class="footer-role">{site.title}, {site.shortLocation}</span>
+    </p>
+    <ul role="list" class="footer-links">
+      <li><a href={href('/work/')}>All work</a></li>
+      <li><a href={`mailto:${site.email}`}>Email</a></li>
+      <li><a href={site.linkedin} rel="me noopener" target="_blank">LinkedIn<span class="visually-hidden"> (opens in a new tab)</span></a></li>
+      <li><a href="#main">Back to top <span aria-hidden="true">↑</span></a></li>
+    </ul>
+    <p class="footer-note">
+      © {year} {site.fullName}. Work shown was created for FotoOwl and Technotreon. Company names and logos of
+      FotoOwl, Technotreon, Insplore Consultants and Your Growth Partner belong to their owners.
+    </p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background: var(--night);
+    color: var(--on-night-muted);
+    border-top: 1px solid var(--night-2);
+  }
+
+  .footer-inner {
+    display: grid;
+    gap: 1.5rem 2rem;
+    padding-block: 2.5rem;
+    font-size: var(--step--1);
+  }
+
+  .footer-name {
+    display: grid;
+    gap: 0.2rem;
+    color: var(--on-night);
+    font-weight: 600;
+  }
+
+  .footer-role {
+    font-weight: 400;
+    color: var(--on-night-muted);
+  }
+
+  .footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.75rem;
+  }
+
+  .footer-links a {
+    color: var(--on-night);
+    text-decoration: none;
+  }
+
+  .footer-links a:hover {
+    color: var(--accent-on-night);
+    text-decoration: underline;
+  }
+
+  .footer-note {
+    max-width: 44rem;
+  }
+
+  .site-footer :focus-visible {
+    outline-color: var(--accent-on-night);
+  }
+
+  @media (min-width: 900px) {
+    .footer-inner {
+      grid-template-columns: 1fr auto;
+      align-items: center;
+    }
+
+    .footer-note {
+      grid-column: 1 / -1;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--night-2);
+    }
+  }
+</style>

@@ -1,0 +1,365 @@
+---
+import { site } from '../data/site';
+import { href } from '../lib/paths';
+
+const group = [
+  { label: 'Work', href: href('/work/'), key: 'work' },
+  { label: 'Design', href: href('/#design'), key: 'design' },
+  { label: 'Marketing', href: href('/#marketing'), key: 'marketing' },
+  { label: 'Video & AI', href: href('/#video'), key: 'video' },
+];
+const solo = [
+  { label: 'Experience', href: href('/#experience'), key: 'experience' },
+  { label: 'About', href: href('/#about'), key: 'about' },
+];
+const all = [...group, ...solo, { label: 'Contact', href: '#contact', key: 'contact' }];
+const path = Astro.url.pathname;
+const onWork = path.startsWith(href('/work/'));
+---
+
+<header class="site-header" data-header>
+  <div class="container header-inner">
+    <a class="wordmark" href={href('/')}>
+      <span class="wordmark-mark" aria-hidden="true">PV</span>
+      <span class="wordmark-name">{site.name}</span>
+      <span class="visually-hidden">, home</span>
+    </a>
+
+    <nav class="primary-nav" aria-label="Primary">
+      <ul role="list" class="nav-group">
+        {
+          group.map((link) => (
+            <li>
+              <a
+                href={link.href}
+                data-nav={link.key}
+                aria-current={link.key === 'work' && onWork ? 'page' : undefined}
+              >
+                {link.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <ul role="list" class="nav-solo">
+        {
+          solo.map((link) => (
+            <li>
+              <a href={link.href} data-nav={link.key}>
+                {link.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <a class="header-cta" href="#contact">Contact me</a>
+
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" data-menu-toggle>
+      <span data-menu-label>Menu</span>
+      <span class="menu-icon" aria-hidden="true"><span></span><span></span></span>
+    </button>
+  </div>
+
+  <div class="mobile-menu" id="mobile-menu" data-menu hidden>
+    <nav class="container" aria-label="Mobile">
+      <ul role="list" class="mobile-links">
+        {
+          all.map((link, i) => (
+            <li>
+              <a href={link.href} data-menu-link>
+                <span class="mono">{String(i + 1).padStart(2, '0')}</span>
+                {link.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <div class="mobile-contact">
+        <a href={`mailto:${site.email}`}>{site.email}</a>
+        <a href={site.linkedin} rel="me noopener" target="_blank">LinkedIn</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(245, 245, 242, 0.86);
+    backdrop-filter: saturate(1.4) blur(12px);
+    -webkit-backdrop-filter: saturate(1.4) blur(12px);
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.3s var(--ease);
+  }
+
+  .site-header[data-scrolled] {
+    border-bottom-color: var(--rule);
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-height: var(--header-h);
+  }
+
+  .wordmark {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin-right: auto;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+  }
+
+  .wordmark-mark {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 8px;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    transition: background-color 0.3s var(--ease);
+  }
+
+  .wordmark:hover .wordmark-mark {
+    background: var(--accent);
+  }
+
+  .primary-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .nav-group,
+  .nav-solo {
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  .nav-group {
+    padding: 0.25rem;
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    background: rgba(251, 251, 249, 0.8);
+  }
+
+  .primary-nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.25rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: 8px;
+    font-size: var(--step--1);
+    font-weight: 500;
+    text-decoration: none;
+    color: var(--ink-2);
+    transition:
+      background-color 0.2s var(--ease),
+      color 0.2s var(--ease);
+  }
+
+  .nav-solo a {
+    border: 1px solid var(--rule);
+    background: rgba(251, 251, 249, 0.8);
+  }
+
+  .primary-nav a:hover {
+    background: var(--paper-2);
+    color: var(--ink);
+  }
+
+  .primary-nav a[aria-current='page'],
+  .primary-nav a[data-active] {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .header-cta {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.5rem;
+    padding: 0.45rem 1rem;
+    border-radius: 10px;
+    background: var(--ink);
+    color: var(--paper);
+    font-size: var(--step--1);
+    font-weight: 500;
+    text-decoration: none;
+    transition: background-color 0.25s var(--ease);
+  }
+
+  .header-cta:hover {
+    background: #000;
+  }
+
+  .menu-toggle {
+    display: none;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: 2.75rem;
+    padding: 0.5rem 0.25rem 0.5rem 0.75rem;
+    border: 0;
+    background: none;
+    font-size: var(--step--1);
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .menu-icon {
+    display: grid;
+    gap: 5px;
+    width: 1.25rem;
+  }
+
+  .menu-icon span {
+    height: 1.5px;
+    background: currentColor;
+    transition: transform 0.3s var(--ease);
+  }
+
+  .menu-toggle[aria-expanded='true'] .menu-icon span:first-child {
+    transform: translateY(3.25px) rotate(45deg);
+  }
+
+  .menu-toggle[aria-expanded='true'] .menu-icon span:last-child {
+    transform: translateY(-3.25px) rotate(-45deg);
+  }
+
+  .mobile-menu {
+    position: fixed;
+    inset: var(--header-h) 0 0;
+    z-index: 49;
+    overflow-y: auto;
+    background: var(--paper);
+    border-top: 1px solid var(--rule);
+  }
+
+  .mobile-links {
+    padding-block: 1.5rem;
+  }
+
+  .mobile-links a {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    padding-block: 0.85rem;
+    border-bottom: 1px solid var(--rule);
+    font-size: var(--step-3);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    text-decoration: none;
+  }
+
+  .mobile-links .mono {
+    font-size: var(--step--1);
+    font-weight: 400;
+    color: var(--accent);
+  }
+
+  .mobile-contact {
+    display: grid;
+    gap: 0.75rem;
+    padding-block: 1rem 3rem;
+  }
+
+  @media (max-width: 1079px) {
+    .primary-nav {
+      display: none;
+    }
+
+    .menu-toggle {
+      display: inline-flex;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .header-cta {
+      display: none;
+    }
+  }
+
+  @media (min-width: 1080px) {
+    .mobile-menu {
+      display: none !important;
+    }
+  }
+</style>
+
+<script>
+  const header = document.querySelector<HTMLElement>('[data-header]');
+  const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+  const menu = document.querySelector<HTMLElement>('[data-menu]');
+  const label = document.querySelector<HTMLElement>('[data-menu-label]');
+  const outside = () => document.querySelectorAll<HTMLElement>('main, footer');
+
+  function setOpen(open: boolean, returnFocus = true) {
+    if (!toggle || !menu) return;
+    toggle.setAttribute('aria-expanded', String(open));
+    menu.hidden = !open;
+    if (label) label.textContent = open ? 'Close' : 'Menu';
+    document.documentElement.classList.toggle('menu-open', open);
+    outside().forEach((el) => (open ? el.setAttribute('inert', '') : el.removeAttribute('inert')));
+    if (open) menu.querySelector<HTMLAnchorElement>('a')?.focus();
+    else if (returnFocus) toggle.focus();
+  }
+
+  toggle?.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
+  menu?.querySelectorAll('[data-menu-link]').forEach((link) =>
+    link.addEventListener('click', () => setOpen(false, false)),
+  );
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && toggle?.getAttribute('aria-expanded') === 'true') setOpen(false);
+  });
+  window.matchMedia('(min-width: 1080px)').addEventListener('change', (e) => {
+    if (e.matches) setOpen(false, false);
+  });
+
+  let ticking = false;
+  const onScroll = () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      header?.toggleAttribute('data-scrolled', window.scrollY > 8);
+      ticking = false;
+    });
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  // Highlight the section being read (home page only). Styling only, not announced.
+  const keys = ['design', 'marketing', 'video', 'experience', 'about'];
+  const sections = keys.map((key) => document.getElementById(key)).filter((el): el is HTMLElement => Boolean(el));
+  if (sections.length && 'IntersectionObserver' in window) {
+    const links = new Map(
+      [...document.querySelectorAll<HTMLAnchorElement>('.primary-nav a[data-nav]')].map((a) => [a.dataset.nav, a]),
+    );
+    const visible = new Set<string>();
+    const update = () => {
+      const active = keys.find((key) => visible.has(key));
+      links.forEach((link, key) => link.toggleAttribute('data-active', key === active));
+    };
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) visible.add(entry.target.id);
+          else visible.delete(entry.target.id);
+        });
+        update();
+      },
+      { rootMargin: '-45% 0px -50% 0px' },
+    );
+    sections.forEach((section) => observer.observe(section));
+  }
+</script>

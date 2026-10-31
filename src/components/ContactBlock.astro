@@ -1,0 +1,187 @@
+---
+import { site } from '../data/site';
+import DotField from './DotField.astro';
+
+interface Props {
+  /** Smaller version for the end of case studies. */
+  compact?: boolean;
+  id?: string;
+}
+
+const { compact = false, id = 'contact' } = Astro.props;
+---
+
+<section class:list={['contact', { 'contact--compact': compact }]} id={id} aria-labelledby={`${id}-title`}>
+  <DotField tone="dark" fade="right" spacing={24} />
+  <div class="container contact-inner">
+    <p class="eyebrow">Contact</p>
+    <h2 class="contact-title" id={`${id}-title`} data-split>
+      Have a project or a role in mind? <span class="contact-tone">Email is the quickest way to reach me.</span>
+    </h2>
+    <p class="contact-lede">Based in {site.location}.</p>
+    <a class="contact-email" href={`mailto:${site.email}`}>
+      <span>{site.email}</span>
+      <span class="arrow" aria-hidden="true">→</span>
+    </a>
+    <ul role="list" class="contact-actions">
+      <li>
+        <button class="contact-btn" type="button" data-copy={site.email} data-magnetic>
+          <span data-copy-label>Copy email</span>
+        </button>
+      </li>
+      <li>
+        <a class="contact-btn" href={site.linkedin} rel="me noopener" target="_blank" data-magnetic>
+          LinkedIn<span class="visually-hidden"> (opens in a new tab)</span>
+        </a>
+      </li>
+      {
+        site.showPhone && (
+          <li>
+            <a class="contact-btn" href={site.phoneHref}>
+              {site.phone}
+            </a>
+          </li>
+        )
+      }
+    </ul>
+    <p class="contact-status mono" data-copy-status role="status" aria-live="polite"></p>
+  </div>
+</section>
+
+<style>
+  .contact {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background: var(--night);
+    color: var(--on-night);
+    padding-block: var(--section);
+  }
+
+  .contact--compact {
+    padding-block: clamp(3.5rem, 8vw, 6rem);
+  }
+
+  .contact .eyebrow {
+    color: var(--on-night-muted);
+  }
+
+  .contact .eyebrow :global(.num) {
+    color: var(--accent-on-night);
+  }
+
+  .contact-inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 1.25rem;
+  }
+
+  .contact-title {
+    max-width: 22ch;
+    font-size: var(--step-4);
+    letter-spacing: -0.035em;
+  }
+
+  .contact-tone {
+    color: var(--on-night-tone);
+  }
+
+  .contact--compact .contact-title {
+    font-size: var(--step-3);
+    max-width: 30ch;
+  }
+
+  .contact-lede {
+    max-width: 36rem;
+    color: var(--on-night-muted);
+    font-size: var(--step-1);
+  }
+
+  .contact-email {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.4em;
+    width: fit-content;
+    max-width: 100%;
+    margin-top: 1rem;
+    font-size: clamp(1.5rem, 0.9rem + 3.6vw, 4.25rem);
+    font-weight: 500;
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.18em;
+    text-decoration-color: rgba(237, 234, 227, 0.3);
+    overflow-wrap: anywhere;
+    transition:
+      color 0.25s var(--ease),
+      text-decoration-color 0.25s var(--ease);
+  }
+
+  .contact-email:hover {
+    color: var(--accent-on-night);
+    text-decoration-color: currentColor;
+  }
+
+  .contact-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .contact-btn {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.9rem;
+    padding: 0.6rem 1.2rem;
+    border: 1px solid rgba(237, 234, 227, 0.4);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--on-night);
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      translate 0.45s var(--ease),
+      background-color 0.25s var(--ease),
+      color 0.25s var(--ease);
+  }
+
+  .contact-btn:hover {
+    background: var(--on-night);
+    color: var(--night);
+  }
+
+  .contact-status {
+    min-height: 1.5em;
+    font-size: var(--step--1);
+    color: var(--on-night-muted);
+  }
+
+  .contact :focus-visible {
+    outline-color: var(--accent-on-night);
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((button) => {
+    const status = button.closest('section')?.querySelector<HTMLElement>('[data-copy-status]');
+    const label = button.querySelector<HTMLElement>('[data-copy-label]');
+    button.addEventListener('click', async () => {
+      const text = button.dataset.copy ?? '';
+      try {
+        await navigator.clipboard.writeText(text);
+        if (label) label.textContent = 'Copied';
+        if (status) status.textContent = `${text} copied to clipboard.`;
+      } catch {
+        if (status) status.textContent = `Copy this address: ${text}`;
+      }
+      window.setTimeout(() => {
+        if (label) label.textContent = 'Copy email';
+      }, 2400);
+    });
+  });
+</script>

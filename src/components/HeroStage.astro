@@ -1,0 +1,397 @@
+---
+/**
+ * Hero visual: one tile per discipline, each built from real project files.
+ * Tiles link to the matching chapter. On devices with a mouse, the pieces drift slightly with
+ * the pointer and the video tile plays a short muted preview on hover.
+ */
+import { Image } from 'astro:assets';
+import { asset } from '../lib/paths';
+import backdrop from '../content/work/fotoowl-expo-backdrop/images/backdrop.jpg';
+import brochure from '../content/work/fotoowl-digital-brochure/images/brochure-02.jpg';
+import metaAd from '../content/work/fotoowl-meta-ads/images/meta-ad-01.jpg';
+import navratri from '../content/work/fotoowl-whatsapp-creatives/images/navratri.jpg';
+import testimonial from '../content/work/fotoowl-videos/images/fotoowl-testimonial-gallery-poster.jpg';
+import tutorial from '../content/work/fotoowl-videos/images/fotoowl-tutorial-share-links-landscape-poster.jpg';
+---
+
+<ul role="list" class="stage" data-stage aria-label="Three areas of my work">
+  <li class="tile-wrap tile-wrap--design" data-reveal style="--reveal-delay: 0.45s">
+    <a class="tile grid-paper" href="#design" data-tile>
+      <span class="tile-head">
+        <span class="tile-num mono">1.0</span>
+        <span class="tile-title">Design &amp; branding</span>
+      </span>
+      <span class="tile-art" aria-hidden="true">
+        <span class="piece piece--backdrop" style="--depth: 6; --rot: 0deg">
+          <Image src={backdrop} alt="" widths={[480, 720, 1000]} sizes="(min-width: 1100px) 34vw, 72vw" quality={78} loading="eager" />
+        </span>
+        <span class="piece piece--brochure" style="--depth: 16; --rot: 5deg; --rot-hover: 1deg">
+          <Image src={brochure} alt="" widths={[160, 260, 360]} sizes="(min-width: 1100px) 9vw, 20vw" quality={78} loading="eager" />
+        </span>
+      </span>
+      <span class="tile-foot mono">
+        <span>Brochures · Expo backdrops · Web screens</span>
+        <span class="arrow" aria-hidden="true">→</span>
+      </span>
+    </a>
+  </li>
+
+  <li class="tile-wrap tile-wrap--marketing" data-reveal style="--reveal-delay: 0.55s">
+    <a class="tile grid-paper" href="#marketing" data-tile>
+      <span class="tile-head">
+        <span class="tile-num mono">2.0</span>
+        <span class="tile-title">Marketing &amp; campaigns</span>
+      </span>
+      <span class="tile-art" aria-hidden="true">
+        <span class="piece piece--ad" style="--depth: 10; --rot: -5deg; --rot-hover: -9deg">
+          <Image src={metaAd} alt="" widths={[200, 320, 440]} sizes="(min-width: 1100px) 12vw, 30vw" quality={78} loading="eager" />
+        </span>
+        <span class="piece piece--offer" style="--depth: 18; --rot: 4deg; --rot-hover: 8deg">
+          <Image src={navratri} alt="" widths={[200, 320, 440]} sizes="(min-width: 1100px) 12vw, 30vw" quality={78} loading="eager" />
+        </span>
+      </span>
+      <span class="tile-foot mono">
+        <span>Meta ads · WhatsApp · Social · SEO</span>
+        <span class="arrow" aria-hidden="true">→</span>
+      </span>
+    </a>
+  </li>
+
+  <li class="tile-wrap tile-wrap--video" data-reveal style="--reveal-delay: 0.65s">
+    <a class="tile grid-paper" href="#video" data-tile>
+      <span class="tile-head">
+        <span class="tile-num mono">3.0</span>
+        <span class="tile-title">Video &amp; AI</span>
+      </span>
+      <span class="tile-art" aria-hidden="true">
+        <span class="piece piece--tutorial" style="--depth: 8; --rot: -6deg">
+          <Image src={tutorial} alt="" widths={[300, 480, 640]} sizes="(min-width: 1100px) 16vw, 40vw" quality={74} loading="eager" />
+        </span>
+        <span class="piece piece--phone" style="--depth: 16; --rot: 0deg">
+          <Image src={testimonial} alt="" widths={[200, 320, 440]} sizes="(min-width: 1100px) 11vw, 30vw" quality={78} loading="eager" />
+          <video
+            muted
+            loop
+            playsinline
+            preload="none"
+            data-hover-video
+            data-src={asset('/media/preview/fotoowl-testimonial-gallery.mp4')}></video>
+          <span class="play-badge">
+            <svg viewBox="0 0 24 24" width="14" height="14"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"></path></svg>
+          </span>
+        </span>
+      </span>
+      <span class="tile-foot mono">
+        <span>Testimonials · Tutorials · AI video</span>
+        <span class="arrow" aria-hidden="true">→</span>
+      </span>
+    </a>
+  </li>
+</ul>
+
+<style>
+  .stage {
+    display: grid;
+    grid-template-columns: 5fr 4fr 3fr;
+    gap: clamp(0.75rem, 1.4vw, 1.25rem);
+  }
+
+  .tile-wrap--design {
+    --ratio: 1.08;
+  }
+
+  .tile-wrap--marketing {
+    --ratio: 0.9;
+  }
+
+  .tile-wrap--video {
+    --ratio: 0.68;
+  }
+
+  .tile {
+    --px: 0;
+    --py: 0;
+    position: relative;
+    display: block;
+    height: clamp(26rem, 34vw, 31rem);
+    overflow: hidden;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    isolation: isolate;
+    transition:
+      border-color 0.3s var(--ease),
+      box-shadow 0.3s var(--ease);
+  }
+
+  .tile:hover,
+  .tile:focus-visible {
+    border-color: var(--rule-strong);
+    box-shadow: var(--shadow-lift);
+  }
+
+  .tile-head {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.4rem 0.75rem 0.4rem 0.5rem;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: rgba(251, 251, 249, 0.92);
+    backdrop-filter: blur(6px);
+  }
+
+  .tile-num {
+    padding: 0.1rem 0.4rem;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--paper);
+    font-size: var(--step--2);
+  }
+
+  .tile-title {
+    font-size: var(--step--1);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .tile-foot {
+    position: absolute;
+    left: 1rem;
+    right: 1rem;
+    bottom: 0.9rem;
+    z-index: 3;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-size: var(--step--2);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+  }
+
+  .tile:hover .tile-foot .arrow {
+    transform: translateX(4px);
+    color: var(--accent);
+  }
+
+  .tile-art {
+    position: absolute;
+    inset: 0;
+  }
+
+  .piece {
+    position: absolute;
+    display: block;
+    overflow: hidden;
+    border-radius: 8px;
+    box-shadow: var(--shadow-lift);
+    transform: translate3d(calc(var(--px) * var(--depth) * 1px), calc(var(--py) * var(--depth) * 1px), 0)
+      rotate(var(--rot));
+    transition: transform 0.7s var(--ease);
+  }
+
+  .tile:hover .piece,
+  .tile:focus-visible .piece {
+    transform: translate3d(calc(var(--px) * var(--depth) * 1px), calc(var(--py) * var(--depth) * 1px), 0)
+      rotate(var(--rot-hover, var(--rot)));
+  }
+
+  /* A slow idle float, offset per piece so they never move in step. */
+  @media (prefers-reduced-motion: no-preference) {
+    .piece {
+      animation: piece-float 6.5s ease-in-out infinite alternate;
+    }
+
+    .piece--brochure,
+    .piece--offer,
+    .piece--phone {
+      animation-duration: 7.5s;
+      animation-delay: -3s;
+    }
+  }
+
+  @keyframes piece-float {
+    from {
+      translate: 0 0;
+    }
+    to {
+      translate: 0 -9px;
+    }
+  }
+
+  .piece :global(img),
+  .piece video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Design tile: backdrop artwork with a brochure page in front. */
+  .piece--backdrop {
+    left: 9%;
+    top: 19%;
+    width: 76%;
+    aspect-ratio: 2800 / 2297;
+  }
+
+  .piece--brochure {
+    right: 6%;
+    bottom: 11%;
+    width: 21%;
+    aspect-ratio: 9 / 16;
+  }
+
+  /* Marketing tile: a Meta ad and a WhatsApp offer, fanned. */
+  .piece--ad {
+    left: 11%;
+    top: 18%;
+    width: 41%;
+    aspect-ratio: 9 / 16;
+    z-index: 1;
+  }
+
+  .piece--offer {
+    right: 10%;
+    top: 21%;
+    width: 41%;
+    aspect-ratio: 9 / 16;
+    z-index: 2;
+  }
+
+  /* Video tile: a tutorial frame behind a testimonial in a phone. */
+  .piece--tutorial {
+    left: 5%;
+    top: 20%;
+    width: 74%;
+    aspect-ratio: 16 / 9;
+    z-index: 1;
+  }
+
+  .piece--phone {
+    left: 34%;
+    top: 16%;
+    width: 52%;
+    aspect-ratio: 9 / 16;
+    z-index: 2;
+    border: 5px solid var(--ink);
+    border-radius: 18px;
+    background: var(--ink);
+  }
+
+  .piece--phone video {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.4s var(--ease);
+  }
+
+  .piece--phone video.is-playing {
+    opacity: 1;
+  }
+
+  .play-badge {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    background: rgba(251, 251, 249, 0.92);
+    color: var(--ink);
+    transform: translate(-50%, -50%);
+    transition: opacity 0.3s var(--ease);
+  }
+
+  .tile:hover .play-badge {
+    opacity: 0;
+  }
+
+  /* Phones and small tablets: tiles become a horizontal, swipeable row. */
+  @media (max-width: 899px) {
+    .stage {
+      display: flex;
+      gap: 0.75rem;
+      margin-inline: calc(var(--gutter) * -1);
+      padding-inline: var(--gutter);
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-padding-inline: var(--gutter);
+      scrollbar-width: none;
+    }
+
+    .stage::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tile-wrap {
+      flex: none;
+      scroll-snap-align: start;
+    }
+
+    .tile {
+      height: min(23rem, calc((100vw - 2 * var(--gutter)) / 1.08));
+      aspect-ratio: var(--ratio);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .piece,
+    .tile:hover .piece,
+    .tile:focus-visible .piece {
+      transition: none;
+      transform: rotate(var(--rot));
+    }
+  }
+</style>
+
+<script>
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const fine = window.matchMedia('(hover: hover) and (pointer: fine)');
+  const saveData = Boolean((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData);
+
+  document.querySelectorAll<HTMLElement>('[data-tile]').forEach((tile) => {
+    let frame = 0;
+    tile.addEventListener('pointermove', (event) => {
+      if (reduce.matches || !fine.matches || frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const rect = tile.getBoundingClientRect();
+        tile.style.setProperty('--px', (((event.clientX - rect.left) / rect.width) * 2 - 1).toFixed(3));
+        tile.style.setProperty('--py', (((event.clientY - rect.top) / rect.height) * 2 - 1).toFixed(3));
+      });
+    });
+    tile.addEventListener('pointerleave', () => {
+      tile.style.setProperty('--px', '0');
+      tile.style.setProperty('--py', '0');
+    });
+
+    const video = tile.querySelector<HTMLVideoElement>('[data-hover-video]');
+    if (!video) return;
+    const play = () => {
+      if (reduce.matches || saveData) return;
+      if (!video.src && video.dataset.src) video.src = video.dataset.src;
+      video.play().catch(() => {
+        /* Autoplay can be blocked; the poster stays visible. */
+      });
+    };
+    const stop = () => {
+      video.pause();
+      video.classList.remove('is-playing');
+    };
+    video.addEventListener('playing', () => video.classList.add('is-playing'));
+    tile.addEventListener('pointerenter', () => {
+      if (fine.matches) play();
+    });
+    tile.addEventListener('pointerleave', stop);
+    tile.addEventListener('focus', play);
+    tile.addEventListener('blur', stop);
+  });
+</script>

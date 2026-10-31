@@ -1,0 +1,195 @@
+---
+import ContactBlock from '../../components/ContactBlock.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+import { DISCIPLINES } from '../../data/taxonomy';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { disciplinesOf, getWork, slugify } from '../../lib/work';
+
+const all = await getWork();
+const counts = Object.fromEntries(
+  DISCIPLINES.map((d) => [d, all.filter((w) => disciplinesOf(w).includes(d)).length]),
+);
+---
+
+<BaseLayout
+  title="All work"
+  description="All projects by Prajwal Vispute: brochures, expo branding, social and ad creatives, website UI and product videos for FotoOwl and Technotreon."
+>
+  <section class="section work-page" aria-labelledby="all-work-title">
+    <div class="container">
+      <header class="section-head">
+        <p class="eyebrow"><span class="num">{String(all.length).padStart(2, '0')}</span> Projects</p>
+        <h1 class="section-title" id="all-work-title" data-split>
+          All work <span class="tone">for FotoOwl and Technotreon.</span>
+        </h1>
+        <p class="section-intro">
+          Brochures, campaigns, social, web and video work for FotoOwl and Technotreon. Filter by discipline or open any
+          project for the full case study.
+        </p>
+      </header>
+
+      <div class="filters" data-filters hidden>
+        <p class="filters-label mono" id="filters-label">Filter by discipline</p>
+        <div class="filter-buttons" role="group" aria-labelledby="filters-label">
+          <button type="button" class="filter" aria-pressed="true" data-filter="all" data-label="All disciplines">
+            All <span class="filter-count">{all.length}</span>
+          </button>
+          {
+            DISCIPLINES.map((d) => (
+              <button type="button" class="filter" aria-pressed="false" data-filter={slugify(d)} data-label={d}>
+                {d} <span class="filter-count">{counts[d]}</span>
+              </button>
+            ))
+          }
+        </div>
+        <p class="filter-status mono" data-filter-status role="status" aria-live="polite"></p>
+      </div>
+
+      <ul role="list" class="work-grid" data-work-grid>
+        {
+          all.map((work, i) => (
+            <li data-disciplines={disciplinesOf(work).map(slugify).join(' ')}>
+              <ProjectCard work={work} number={i + 1} headingLevel="h2" eager={i < 2} morph />
+            </li>
+          ))
+        }
+      </ul>
+
+      <div class="work-empty" data-work-empty hidden>
+        <p class="work-empty-title">No projects in this discipline yet.</p>
+        <button type="button" class="btn btn-ghost" data-filter="all">Show all work</button>
+      </div>
+    </div>
+  </section>
+
+  <ContactBlock compact />
+</BaseLayout>
+
+<style>
+  .work-page {
+    padding-top: clamp(2.5rem, 6vw, 5rem);
+  }
+
+  .filters {
+    display: grid;
+    gap: 0.9rem;
+    margin-bottom: clamp(2rem, 4vw, 3.5rem);
+    padding-block: 1.25rem;
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .filters-label {
+    font-size: var(--step--2);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .filter-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.6rem;
+    padding: 0.45rem 1rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    background: transparent;
+    font-size: var(--step--1);
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+      background-color 0.2s var(--ease),
+      color 0.2s var(--ease),
+      border-color 0.2s var(--ease);
+  }
+
+  .filter:hover {
+    border-color: var(--ink);
+  }
+
+  .filter[aria-pressed='true'] {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
+  }
+
+  .filter-count {
+    font-family: var(--mono);
+    font-size: var(--step--2);
+    opacity: 0.7;
+  }
+
+  .filter-status {
+    min-height: 1.4em;
+    font-size: var(--step--1);
+    color: var(--muted);
+  }
+
+  .work-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+    gap: clamp(3rem, 5vw, 4.5rem) var(--gap);
+  }
+
+  .work-grid > li[hidden] {
+    display: none;
+  }
+
+  .work-empty {
+    display: grid;
+    justify-items: start;
+    gap: 1rem;
+    padding: 3rem 0;
+  }
+
+  .work-empty-title {
+    font-size: var(--step-2);
+    font-weight: 600;
+  }
+</style>
+
+<script>
+  const filters = document.querySelector<HTMLElement>('[data-filters]');
+  const grid = document.querySelector<HTMLElement>('[data-work-grid]');
+  const empty = document.querySelector<HTMLElement>('[data-work-empty]');
+  const status = document.querySelector<HTMLElement>('[data-filter-status]');
+
+  if (filters && grid && empty && status) {
+    filters.hidden = false;
+    const buttons = [...filters.querySelectorAll<HTMLButtonElement>('button[data-filter]')];
+    const items = [...grid.querySelectorAll<HTMLElement>(':scope > li')];
+
+    const apply = (value: string, updateUrl = true) => {
+      const known = buttons.some((b) => b.dataset.filter === value);
+      const filter = known ? value : 'all';
+      let shown = 0;
+      items.forEach((item) => {
+        const match = filter === 'all' || (item.dataset.disciplines ?? '').split(' ').includes(filter);
+        item.hidden = !match;
+        if (match) shown++;
+      });
+      buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.filter === filter)));
+      empty.hidden = shown > 0;
+      const label = buttons.find((b) => b.dataset.filter === filter)?.dataset.label ?? 'All disciplines';
+      status.textContent = `Showing ${shown} ${shown === 1 ? 'project' : 'projects'}: ${label}.`;
+      if (updateUrl) {
+        const url = new URL(window.location.href);
+        if (filter === 'all') url.searchParams.delete('discipline');
+        else url.searchParams.set('discipline', filter);
+        history.replaceState(null, '', url);
+      }
+    };
+
+    buttons.forEach((b) => b.addEventListener('click', () => apply(b.dataset.filter ?? 'all')));
+    empty.querySelector('button')?.addEventListener('click', () => apply('all'));
+    const initial = new URL(window.location.href).searchParams.get('discipline');
+    apply(initial ?? 'all', false);
+  }
+</script>

@@ -1,0 +1,85 @@
+---
+/**
+ * Renders an official company logo at a consistent visual size.
+ * - surface="light": the light-background logo, shown as is (or on a white tile with tile={true}).
+ * - surface="dark": the dark-background version if the company has one; otherwise the light logo
+ *   on a white tile, so it always stays legible.
+ */
+import type { ImageMetadata } from 'astro';
+import { Image } from 'astro:assets';
+import { logoFor } from '../data/companies';
+import { asset } from '../lib/paths';
+
+interface Props {
+  company: string;
+  surface?: 'light' | 'dark';
+  /** Base logo height in px before the per-logo scale is applied. */
+  height?: number;
+  tile?: boolean;
+  /** Alt text. Pass an empty string when the company name is already written next to the logo. */
+  alt?: string;
+  class?: string;
+}
+
+const { company, surface = 'light', height = 24, tile = false, alt, class: className } = Astro.props;
+const logo = logoFor(company);
+const useDark = surface === 'dark' && Boolean(logo?.dark);
+const needsTile = tile || (surface === 'dark' && !useDark);
+const h = Math.round(height * (logo?.scale ?? 1));
+const altText = alt ?? (logo ? `${logo.name} logo` : company);
+const source = logo ? (useDark ? logo.dark! : logo.light) : undefined;
+// SVG logos live in public/ and carry no `format`; imported raster logos are optimised by Astro.
+const isPublicFile = source ? !('format' in source) : false;
+const w = source ? Math.round((source.width / source.height) * h) : 0;
+---
+
+{
+  source ? (
+    <span class:list={['company-logo', { 'company-logo--tile': needsTile }, className]} style={`--logo-h:${h}px`}>
+      {isPublicFile ? (
+        <img src={asset(source.src)} alt={altText} width={w} height={h} loading="lazy" decoding="async" />
+      ) : (
+        <Image
+          src={source as ImageMetadata}
+          alt={altText}
+          height={h}
+          width={w}
+          densities={[1, 2, 3]}
+          format="webp"
+          quality={90}
+          loading="lazy"
+        />
+      )}
+    </span>
+  ) : (
+    <span class:list={['company-logo company-logo--text', className]}>{company}</span>
+  )
+}
+
+<style>
+  .company-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+  }
+
+  .company-logo :global(img) {
+    display: block;
+    width: auto;
+    height: var(--logo-h);
+    max-width: 100%;
+    object-fit: contain;
+  }
+
+  .company-logo--tile {
+    padding: 0.55rem 0.85rem;
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    background: #ffffff;
+  }
+
+  .company-logo--text {
+    font-weight: 600;
+  }
+</style>

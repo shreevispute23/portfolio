@@ -1,0 +1,232 @@
+---
+/**
+ * Full-size image viewer. Any link with data-lightbox opens it.
+ * Keyboard: Esc closes, left/right arrows move through the images of the same group.
+ * Without JavaScript the links simply open the full-size image.
+ */
+---
+
+<dialog class="lightbox" data-lightbox aria-label="Image viewer">
+  <div class="lightbox-stage" data-lightbox-stage>
+    <figure class="lightbox-figure">
+      <img data-lightbox-img alt="" decoding="async" />
+      <figcaption class="lightbox-caption" data-lightbox-caption></figcaption>
+    </figure>
+    <p class="lightbox-state mono" data-lightbox-state role="status"></p>
+  </div>
+  <div class="lightbox-bar">
+    <p class="lightbox-count mono" data-lightbox-count aria-live="polite"></p>
+    <div class="lightbox-controls">
+      <button type="button" class="lightbox-btn" data-lightbox-prev aria-label="Previous image">
+        <span aria-hidden="true">←</span>
+      </button>
+      <button type="button" class="lightbox-btn" data-lightbox-next aria-label="Next image">
+        <span aria-hidden="true">→</span>
+      </button>
+      <button type="button" class="lightbox-btn lightbox-close" data-lightbox-close>
+        Close <span aria-hidden="true">×</span>
+      </button>
+    </div>
+  </div>
+</dialog>
+
+<style>
+  .lightbox {
+    width: 100vw;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: rgba(19, 19, 18, 0.97);
+    color: var(--on-night);
+  }
+
+  .lightbox[open] {
+    display: grid;
+    grid-template-rows: 1fr auto;
+  }
+
+  .lightbox::backdrop {
+    background: rgba(19, 19, 18, 0.6);
+  }
+
+  .lightbox-stage {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 0;
+    padding: clamp(0.75rem, 3vw, 2.5rem) clamp(0.75rem, 3vw, 2.5rem) 0;
+  }
+
+  .lightbox-figure {
+    display: grid;
+    justify-items: center;
+    gap: 0.9rem;
+    max-width: 100%;
+    max-height: 100%;
+    min-height: 0;
+  }
+
+  .lightbox-figure img {
+    max-width: min(100%, 1800px);
+    max-height: calc(100dvh - 9rem);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 2px;
+    opacity: 1;
+    transition: opacity 0.3s var(--ease);
+  }
+
+  .lightbox[data-loading] .lightbox-figure img {
+    opacity: 0.25;
+  }
+
+  .lightbox-caption {
+    max-width: 48rem;
+    font-size: var(--step--1);
+    text-align: center;
+    color: var(--on-night-muted);
+  }
+
+  .lightbox-state {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: var(--step--1);
+    color: var(--on-night);
+    pointer-events: none;
+  }
+
+  .lightbox-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem clamp(0.75rem, 3vw, 2.5rem);
+  }
+
+  .lightbox-count {
+    font-size: var(--step--1);
+    color: var(--on-night-muted);
+  }
+
+  .lightbox-controls {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .lightbox-btn {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0.5rem 0.9rem;
+    border: 1px solid rgba(237, 234, 227, 0.35);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--on-night);
+    cursor: pointer;
+    transition:
+      background-color 0.2s var(--ease),
+      color 0.2s var(--ease);
+  }
+
+  .lightbox-btn:hover {
+    background: var(--on-night);
+    color: var(--night);
+  }
+
+  .lightbox-btn[hidden] {
+    display: none;
+  }
+
+  .lightbox :focus-visible {
+    outline-color: var(--accent-on-night);
+  }
+</style>
+
+<script>
+  const dialog = document.querySelector<HTMLDialogElement>('[data-lightbox]');
+
+  if (dialog) {
+    const img = dialog.querySelector<HTMLImageElement>('[data-lightbox-img]')!;
+    const caption = dialog.querySelector<HTMLElement>('[data-lightbox-caption]')!;
+    const count = dialog.querySelector<HTMLElement>('[data-lightbox-count]')!;
+    const state = dialog.querySelector<HTMLElement>('[data-lightbox-state]')!;
+    const prev = dialog.querySelector<HTMLButtonElement>('[data-lightbox-prev]')!;
+    const next = dialog.querySelector<HTMLButtonElement>('[data-lightbox-next]')!;
+    const close = dialog.querySelector<HTMLButtonElement>('[data-lightbox-close]')!;
+
+    let items: HTMLAnchorElement[] = [];
+    let index = 0;
+
+    const show = (i: number) => {
+      index = (i + items.length) % items.length;
+      const link = items[index];
+      const alt = link.dataset.alt ?? '';
+      dialog.setAttribute('data-loading', '');
+      state.textContent = 'Loading…';
+      img.onload = () => {
+        dialog.removeAttribute('data-loading');
+        state.textContent = '';
+      };
+      img.onerror = () => {
+        dialog.removeAttribute('data-loading');
+        state.textContent = 'This image could not be loaded.';
+      };
+      img.src = link.href;
+      img.alt = alt;
+      caption.textContent = link.dataset.caption ?? '';
+      caption.hidden = !link.dataset.caption;
+      count.textContent = items.length > 1 ? `${index + 1} / ${items.length}` : '';
+      prev.hidden = next.hidden = items.length < 2;
+      // Warm the cache for the neighbours.
+      if (items.length > 1) {
+        [index + 1, index - 1].forEach((n) => {
+          const neighbour = items[(n + items.length) % items.length];
+          new Image().src = neighbour.href;
+        });
+      }
+    };
+
+    document.addEventListener('click', (event) => {
+      const link = (event.target as Element | null)?.closest<HTMLAnchorElement>('a[data-lightbox]');
+      if (!link || event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+      event.preventDefault();
+      const group = link.dataset.lightbox;
+      items = [...document.querySelectorAll<HTMLAnchorElement>(`a[data-lightbox="${group}"]`)];
+      dialog.showModal();
+      show(items.indexOf(link));
+      close.focus();
+    });
+
+    prev.addEventListener('click', () => show(index - 1));
+    next.addEventListener('click', () => show(index + 1));
+    close.addEventListener('click', () => dialog.close());
+
+    dialog.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowLeft') show(index - 1);
+      if (event.key === 'ArrowRight') show(index + 1);
+    });
+
+    // Click on the dark area (not the image or controls) closes the viewer.
+    dialog.addEventListener('click', (event) => {
+      const target = event.target as Element;
+      if (target === dialog || target.matches('[data-lightbox-stage]')) dialog.close();
+    });
+
+    // Basic swipe support on touch screens.
+    let startX = 0;
+    dialog.addEventListener('pointerdown', (event) => (startX = event.clientX));
+    dialog.addEventListener('pointerup', (event) => {
+      const dx = event.clientX - startX;
+      if (event.pointerType !== 'mouse' && Math.abs(dx) > 50 && items.length > 1) show(index + (dx < 0 ? 1 : -1));
+    });
+
+    dialog.addEventListener('close', () => {
+      img.removeAttribute('src');
+    });
+  }
+</script>

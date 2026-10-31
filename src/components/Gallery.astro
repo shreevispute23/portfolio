@@ -1,0 +1,336 @@
+---
+/**
+ * One gallery section of a case study: images (open in the lightbox), videos and placeholders.
+ * Layouts: grid-2, grid-3, grid-4, stack (one per row) and pairs (landscape + vertical video).
+ */
+import { getImage, Image } from 'astro:assets';
+import type { Work } from '../lib/work';
+import { site } from '../data/site';
+import { slugify } from '../lib/work';
+import Placeholder from './Placeholder.astro';
+import VideoPlayer from './VideoPlayer.astro';
+
+type Section = Work['data']['gallery'][number];
+
+interface Props {
+  section: Section;
+  /** Lightbox group: images in the same group can be browsed with the arrow keys. */
+  group: string;
+  headingId?: string;
+}
+
+const { section, group, headingId } = Astro.props;
+const items = section.items.filter((item) => item.type !== 'placeholder' || site.showPlaceholders);
+
+const sizesFor: Record<Section['layout'], string> = {
+  'grid-2': '(min-width: 1440px) 660px, (min-width: 760px) 46vw, 94vw',
+  'grid-3': '(min-width: 1440px) 430px, (min-width: 1000px) 30vw, (min-width: 560px) 46vw, 94vw',
+  'grid-4': '(min-width: 1440px) 320px, (min-width: 1000px) 23vw, 46vw',
+  stack: '(min-width: 1440px) 1330px, 94vw',
+  pairs: '(min-width: 1440px) 1000px, 94vw',
+};
+const widthsFor: Record<Section['layout'], number[]> = {
+  'grid-2': [640, 960, 1400],
+  'grid-3': [480, 720, 1080],
+  'grid-4': [360, 560, 840],
+  stack: [800, 1400, 2000],
+  pairs: [800, 1400],
+};
+
+const prepared = await Promise.all(
+  items.map(async (item) => {
+    if (item.type !== 'image') return { item, full: undefined };
+    const full = await getImage({
+      src: item.src,
+      width: Math.min(item.src.width, item.scroll ? 1600 : 2000),
+      format: 'webp',
+      quality: 82,
+    });
+    return { item, full: full.src };
+  }),
+);
+---
+
+{
+  items.length > 0 && (
+    <section
+      class="gallery"
+      id={section.title ? slugify(section.title) : undefined}
+      aria-labelledby={section.title ? headingId : undefined}
+    >
+      {(section.title || section.description) && (
+        <header class="gallery-head">
+          {section.title && <h3 id={headingId}>{section.title}</h3>}
+          {section.description && <p>{section.description}</p>}
+        </header>
+      )}
+      <div class:list={['gallery-grid', `layout-${section.layout}`]}>
+        {prepared.map(({ item, full }) => (
+          <div
+            class:list={[
+              'gallery-item',
+              `item-${item.type}`,
+              item.type === 'image' && item.span === 'full' && 'span-full',
+              item.type === 'video' && `video-${item.orientation}`,
+            ]}
+            data-reveal
+          >
+            {item.type === 'image' && (
+              <figure class:list={['figure', `frame-${item.frame}`]}>
+                {item.frame === 'browser' && (
+                  <div class="browser-bar" aria-hidden="true">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                )}
+                {item.scroll ? (
+                  <div class="scroll-frame media-frame" tabindex="0" role="region" aria-label={`${item.alt} (scrollable)`}>
+                    <Image
+                      src={item.src}
+                      alt={item.alt}
+                      widths={[800, 1200, 1600]}
+                      sizes="(min-width: 1440px) 1330px, 94vw"
+                      quality={80}
+                      loading="lazy"
+                      data-fade
+                    />
+                  </div>
+                ) : (
+                  <a class="zoom media-frame" href={full} data-lightbox={group} data-alt={item.alt} data-caption={item.caption}>
+                    <Image
+                      src={item.src}
+                      alt={item.alt}
+                      widths={widthsFor[section.layout]}
+                      sizes={sizesFor[section.layout]}
+                      quality={78}
+                      loading="lazy"
+                      data-fade
+                    />
+                    <span class="zoom-hint mono" aria-hidden="true">
+                      View
+                    </span>
+                    <span class="visually-hidden">, open larger view</span>
+                  </a>
+                )}
+                {(item.caption || item.scroll) && (
+                  <figcaption>
+                    {item.caption}
+                    {item.scroll && full && (
+                      <>
+                        {' '}
+                        <a class="text-link" href={full} target="_blank" rel="noopener">
+                          Open full image<span class="visually-hidden"> (opens in a new tab)</span>
+                        </a>
+                      </>
+                    )}
+                  </figcaption>
+                )}
+              </figure>
+            )}
+            {item.type === 'video' && (
+              <VideoPlayer
+                src={item.src}
+                poster={item.poster}
+                title={item.title}
+                orientation={item.orientation}
+                duration={item.duration}
+                caption={item.caption}
+              />
+            )}
+            {item.type === 'placeholder' && <Placeholder label={item.label} note={item.note} shape={item.shape} />}
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+<style>
+  .gallery + .gallery {
+    margin-top: clamp(3.5rem, 7vw, 6rem);
+  }
+
+  .gallery-head {
+    display: grid;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--ink);
+  }
+
+  .gallery-head h3 {
+    font-size: var(--step-2);
+    letter-spacing: -0.025em;
+  }
+
+  .gallery-head p {
+    max-width: 40rem;
+    color: var(--ink-2);
+  }
+
+  @media (min-width: 900px) {
+    .gallery-head {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      align-items: baseline;
+      gap: 2rem;
+    }
+  }
+
+  .gallery-grid {
+    display: grid;
+    gap: var(--gap);
+    align-items: start;
+  }
+
+  .layout-grid-2 {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  }
+
+  .layout-grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .layout-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (min-width: 1000px) {
+    .layout-grid-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .layout-grid-4 {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 559px) {
+    .layout-grid-3 .item-video,
+    .layout-grid-3 .item-placeholder {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .layout-stack {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* A landscape video and its vertical version share one row at equal height. */
+  .layout-pairs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  @media (min-width: 760px) {
+    .layout-pairs {
+      grid-template-columns: minmax(0, 3.16fr) minmax(0, 1fr);
+      align-items: start;
+    }
+  }
+
+  .span-full {
+    grid-column: 1 / -1;
+  }
+
+  .figure {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .figure figcaption {
+    font-size: var(--step--1);
+    color: var(--muted);
+  }
+
+  .zoom {
+    display: block;
+    cursor: zoom-in;
+  }
+
+  .zoom :global(img) {
+    width: 100%;
+    height: auto;
+    transition:
+      transform 0.7s var(--ease),
+      opacity 0.6s var(--ease);
+  }
+
+  .zoom:hover :global(img) {
+    transform: scale(1.015);
+  }
+
+  .zoom-hint {
+    position: absolute;
+    right: 0.75rem;
+    bottom: 0.75rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(20, 20, 20, 0.78);
+    color: var(--paper);
+    font-size: var(--step--2);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    opacity: 0;
+    transform: translateY(4px);
+    transition:
+      opacity 0.25s var(--ease),
+      transform 0.25s var(--ease);
+  }
+
+  .zoom:hover .zoom-hint,
+  .zoom:focus-visible .zoom-hint {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Device frames */
+  .frame-browser {
+    gap: 0;
+    overflow: hidden;
+    border: 1px solid var(--rule-strong);
+    border-radius: 8px;
+    background: var(--paper-2);
+  }
+
+  .frame-browser figcaption {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .frame-browser .media-frame {
+    border-radius: 0;
+  }
+
+  .browser-bar {
+    display: flex;
+    gap: 0.4rem;
+    padding: 0.7rem 0.9rem;
+    border-bottom: 1px solid var(--rule);
+    background: var(--paper);
+  }
+
+  .browser-bar span {
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+    background: var(--rule-strong);
+  }
+
+  .frame-phone .media-frame {
+    border: 6px solid var(--ink);
+    border-radius: 1.6rem;
+  }
+
+  .scroll-frame {
+    max-height: min(80vh, 54rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 0;
+    scrollbar-color: var(--rule-strong) transparent;
+  }
+
+  .scroll-frame :global(img) {
+    width: 100%;
+    height: auto;
+  }
+</style>

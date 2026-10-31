@@ -1,0 +1,117 @@
+---
+/**
+ * "Where I've worked": one white tile per employer with its official logo and my role there.
+ * Each tile jumps to the matching entry in the experience section.
+ */
+import { experience } from '../data/experience';
+import { slugify } from '../lib/work';
+import CompanyLogo from './CompanyLogo.astro';
+---
+
+<section class="logos" aria-labelledby="logos-title">
+  <div class="container">
+    <h2 class="logos-title mono" id="logos-title">Where I’ve worked</h2>
+    <ul role="list" class="logo-row">
+      {
+        experience.map((role, i) => (
+          <li data-reveal style={`--reveal-delay:${i * 0.06}s`}>
+            <a class="logo-tile" href={`#experience-${slugify(role.company)}`}>
+              <span class="logo-box">
+                <CompanyLogo company={role.company} height={22} alt={role.company} />
+              </span>
+              <span class="logo-role">{role.role}</span>
+              <span class="logo-when mono">
+                {role.start} – {role.end}
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+    <p class="logos-caption">Design, UI and marketing roles at four companies since January 2025.</p>
+  </div>
+</section>
+
+<style>
+  .logos {
+    padding-block: clamp(2.5rem, 5vw, 4rem);
+  }
+
+  .logos-title {
+    margin-bottom: 1.25rem;
+    font-size: var(--step--1);
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .logo-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  @media (min-width: 900px) {
+    .logo-row {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      max-width: 64rem;
+      margin-inline: auto;
+    }
+  }
+
+  .logo-tile {
+    display: grid;
+    justify-items: center;
+    gap: 0.35rem;
+    height: 100%;
+    padding: 0.9rem 0.9rem 1rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: #ffffff;
+    text-align: center;
+    text-decoration: none;
+    transition:
+      border-color 0.25s var(--ease),
+      box-shadow 0.25s var(--ease),
+      transform 0.25s var(--ease);
+  }
+
+  .logo-tile:hover {
+    border-color: var(--rule-strong);
+    box-shadow: var(--shadow-soft);
+    transform: translateY(-2px);
+  }
+
+  .logo-box {
+    display: grid;
+    place-items: center;
+    height: 3.25rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .logo-role {
+    font-size: var(--step--1);
+    font-weight: 500;
+    line-height: 1.3;
+  }
+
+  .logo-when {
+    font-size: var(--step--2);
+    color: var(--muted);
+  }
+
+  .logos-caption {
+    margin-top: 1rem;
+    font-size: var(--step--1);
+    color: var(--muted);
+    text-align: center;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .logo-tile:hover {
+      transform: none;
+    }
+  }
+</style>
