@@ -18,12 +18,12 @@ const { compact = false, id = 'contact' } = Astro.props;
     <h2 class="contact-title" id={`${id}-title`} data-split>
       Have a project or a role in mind? <span class="contact-tone">Email is the quickest way to reach me.</span>
     </h2>
-    <p class="contact-lede">Based in {site.location}.</p>
-    <a class="contact-email" href={`mailto:${site.email}`}>
+    <p class="contact-lede" data-reveal style="--reveal-delay: 0.05s">Based in {site.location}.</p>
+    <a class="contact-email" href={`mailto:${site.email}`} data-reveal style="--reveal-delay: 0.1s">
       <span>{site.email}</span>
       <span class="arrow" aria-hidden="true">→</span>
     </a>
-    <ul role="list" class="contact-actions">
+    <ul role="list" class="contact-actions" data-reveal style="--reveal-delay: 0.15s">
       <li>
         <button class="contact-btn" type="button" data-copy={site.email} data-magnetic>
           <span data-copy-label>Copy email</span>

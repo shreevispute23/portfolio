@@ -1,4 +1,6 @@
 ---
+import { Image } from 'astro:assets';
+import portrait from '../assets/portrait.png';
 import Chapter from '../components/Chapter.astro';
 import ContactBlock from '../components/ContactBlock.astro';
 import DotField from '../components/DotField.astro';
@@ -63,6 +65,7 @@ const jsonLd = {
 <BaseLayout jsonLd={jsonLd}>
   <section class="hero" aria-labelledby="hero-title">
     <DotField tone="light" fade="bottom" />
+
     <div class="container hero-content">
       <div class="hero-grid">
         <p class="hero-eyebrow eyebrow" data-reveal>
@@ -71,14 +74,44 @@ const jsonLd = {
           <span aria-hidden="true">·</span>
           <span>{site.shortLocation}</span>
         </p>
-        <h1 class="hero-title" id="hero-title">
-          <span class="hero-name" data-split>{site.name}</span>
-          <span class="hero-position" data-split style="--split-delay: 0.35s">
-            {site.positioning.lead} <span class="tone">{site.positioning.tone}</span>
-          </span>
+        <h1 class="hero-title visually-hidden" id="hero-title">
+          {site.name}, {site.positioning.lead} {site.positioning.tone}
         </h1>
+
+        <div class="hero-stage-area">
+          <div class="hero-marquee" aria-hidden="true">
+            <div class="marquee-track marquee-track--fill">
+              {Array.from({ length: 10 }).map(() => <span>Prajwal&nbsp;</span>)}
+            </div>
+            <div class="marquee-track marquee-track--outline">
+              {Array.from({ length: 10 }).map(() => <span>Vispute&nbsp;</span>)}
+            </div>
+          </div>
+
+          <figure class="hero-portrait" aria-hidden="true">
+            <Image
+              src={portrait}
+              alt=""
+              widths={[640, 960, 1312]}
+              sizes="(min-width: 1100px) 54vw, (min-width: 640px) 70vw, 88vw"
+              quality={90}
+              loading="eager"
+              fetchpriority="high"
+              data-fade
+            />
+          </figure>
+        </div>
         <div class="hero-side" data-reveal style="--reveal-delay: 0.55s">
-          <p class="hero-intro">{site.hero.intro}</p>
+          <p class="eyebrow hero-what-i-do">
+            <span class="rule" aria-hidden="true"></span>
+            <span>What I do</span>
+            <span class="rule" aria-hidden="true"></span>
+          </p>
+          <p class="hero-intro">
+            I create impactful <strong>marketing campaigns</strong>, engaging social media content and digital
+            experiences. I combine <strong>marketing strategy, creative design and technology</strong> to build
+            meaningful brand communication and digital experiences.
+          </p>
           <p class="hero-current">{site.hero.current}</p>
           <div class="hero-actions">
             <a class="btn btn-primary" href="#work" data-magnetic>
@@ -104,11 +137,11 @@ const jsonLd = {
           Selected work <span class="tone">across design, marketing and video.</span>
         </h2>
         <div class="section-aside">
-          <p class="section-intro">
+          <p class="section-intro" data-reveal>
             Six projects that show the range: a product brochure, Meta ads, customer and tutorial videos, a landing page and
             social content. Each opens into a full case study.
           </p>
-          <p class="aside-link">
+          <p class="aside-link" data-reveal style="--reveal-delay: 0.08s">
             <a class="text-link" href={href('/work/')}>
               All {all.length} projects <span class="arrow" aria-hidden="true">→</span>
             </a>
@@ -242,13 +275,17 @@ const jsonLd = {
   .hero {
     position: relative;
     isolation: isolate;
-    padding-top: clamp(2.5rem, 6vw, 5rem);
+    padding-top: clamp(2rem, 5vw, 4rem);
     padding-bottom: clamp(1rem, 3vw, 2rem);
   }
 
   .hero-content {
     position: relative;
     z-index: 1;
+  }
+
+  .hero-grid {
+    position: relative;
   }
 
   .hero-grid {
@@ -269,63 +306,183 @@ const jsonLd = {
     background: var(--accent);
   }
 
-  .hero-title {
+  /* Stage area holds the character and the two-line marquee behind it. */
+  .hero-stage-area {
     grid-column: 1 / -1;
+    grid-row: 2;
+    position: relative;
+    isolation: isolate;
     display: grid;
-    gap: clamp(0.75rem, 1.5vw, 1.25rem);
+    place-items: center;
+    width: 100%;
+    min-height: min(72vh, 36rem);
   }
 
-  .hero-name {
-    font-size: var(--step-5);
-    font-weight: 500;
-    line-height: 0.92;
-    letter-spacing: -0.05em;
-    margin-left: -0.04em;
+  /* The marquee extends to the viewport edges by escaping the container padding.
+     PRAJWAL fills with charcoal; VISPUTE is outlined. Both scroll right-to-left at
+     slightly different speeds for a layered parallax feel. */
+  .hero-marquee {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(50% - 50vw);
+    right: calc(50% - 50vw);
+    width: 100vw;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0;
+    overflow: hidden;
+    pointer-events: none;
+    user-select: none;
+    mask-image: linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%);
   }
 
-  .hero-position {
-    max-width: 24ch;
-    font-size: var(--step-3);
-    line-height: 1.12;
-    letter-spacing: -0.03em;
+  .marquee-track {
+    display: flex;
+    width: max-content;
+    flex-shrink: 0;
+    font-size: clamp(5rem, 22vw, 18rem);
+    font-weight: 800;
+    line-height: 0.86;
+    letter-spacing: -0.055em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    will-change: transform;
+    animation: hero-marquee 55s linear infinite;
   }
 
+  .marquee-track > :global(span) {
+    display: inline-block;
+    padding-right: 0.08em;
+    flex-shrink: 0;
+  }
+
+  .marquee-track--fill {
+    color: var(--ink);
+  }
+
+  .marquee-track--outline {
+    margin-top: -0.22em;
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--ink-2);
+    text-stroke: 1.5px var(--ink-2);
+    animation-duration: 42s;
+  }
+
+  @keyframes hero-marquee {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      transform: translate3d(-50%, 0, 0);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .marquee-track {
+      font-size: clamp(4rem, 30vw, 10rem);
+      animation-duration: 32s;
+    }
+
+    .marquee-track--outline {
+      animation-duration: 24s;
+      -webkit-text-stroke-width: 1px;
+      text-stroke-width: 1px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .marquee-track {
+      animation: none;
+    }
+  }
+
+  /* Character sits in front of the marquee, centered inside the stage area. */
+  .hero-portrait {
+    position: relative;
+    display: block;
+    width: auto;
+    max-width: min(88vw, 60rem);
+    z-index: 2;
+    margin: 0;
+    pointer-events: none;
+  }
+
+  .hero-portrait :global(img) {
+    width: 100%;
+    height: auto;
+    max-height: 72vh;
+    object-fit: contain;
+    display: block;
+  }
+
+  /* "What I do" intro, centered under the character. The intro paragraph takes up to
+     95vw / 1450px to read as a single wide editorial sentence; the eyebrow, current-role
+     line and CTAs stay their own, narrower widths via their own max-widths. */
   .hero-side {
     grid-column: 1 / -1;
+    grid-row: 3;
     display: grid;
-    gap: 1rem;
-    align-content: end;
+    gap: clamp(1rem, 2.2vw, 1.5rem);
+    justify-self: center;
+    justify-items: center;
+    text-align: center;
+    width: min(95%, 90.625rem);
+    margin-top: clamp(1.5rem, 4vw, 2.75rem);
   }
 
+  .hero-what-i-do {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: var(--step--2);
+    letter-spacing: 0.14em;
+    color: var(--muted);
+  }
+
+  .hero-what-i-do .rule {
+    display: block;
+    width: 1.75rem;
+    height: 1px;
+    background: var(--rule-strong);
+  }
+
+  /* Intro paragraph: 21px on desktop, natural wrapping to ~3 wide lines at the 95vw
+     measure. justify-self: stretch is needed because the parent grid centers its
+     children to their content width; without it, the paragraph would stay narrow. */
   .hero-intro {
-    max-width: 34rem;
-    font-size: var(--step-1);
+    justify-self: stretch;
+    width: 100%;
+    font-size: clamp(1.0625rem, 0.95rem + 0.6vw, 1.3125rem);
     line-height: 1.5;
-    color: var(--ink-2);
+    color: var(--ink);
+    font-weight: 400;
+    text-wrap: pretty;
+  }
+
+  /* Reserved for marketing campaigns and the three-skills phrase. */
+  .hero-intro strong {
+    font-weight: 600;
+    color: var(--ink);
   }
 
   .hero-current {
-    max-width: 34rem;
+    max-width: 42rem;
     font-size: var(--step--1);
+    line-height: 1.55;
     color: var(--muted);
+    text-wrap: pretty;
   }
 
   .hero-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 0.6rem;
+    justify-content: center;
     margin-top: 0.5rem;
-  }
-
-  @media (min-width: 1100px) {
-    .hero-title {
-      grid-column: 1 / span 7;
-    }
-
-    .hero-side {
-      grid-column: 8 / span 5;
-      padding-bottom: 0.4rem;
-    }
   }
 
   .hero-stage {

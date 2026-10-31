@@ -15,7 +15,7 @@ import CompanyLogo from './CompanyLogo.astro';
       {
         experience.map((role, i) => (
           <li data-reveal style={`--reveal-delay:${i * 0.06}s`}>
-            <a class="logo-tile" href={`#experience-${slugify(role.company)}`}>
+            <a class="logo-tile" href={`#experience-${slugify(role.company)}`} data-tilt>
               <span class="logo-box">
                 <CompanyLogo company={role.company} height={22} alt={role.company} />
               </span>

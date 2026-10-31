@@ -46,7 +46,7 @@ export const COMPANIES = {
   Technotreon: {
     label: 'Created during my role at Technotreon',
     role: 'Marketing & Growth Associate',
-    period: 'Jun 2026 – Present',
+    period: 'Jun – Aug 2026',
   },
   'Insplore Consultants': {
     label: 'Created during my internship at Insplore Consultants',

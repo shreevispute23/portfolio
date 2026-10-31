@@ -7,7 +7,12 @@
  *  data-split    headline words slide up from behind a mask, one after another
  *  data-count    a figure such as "15+" counts up once
  *  data-magnetic a button eases toward the pointer
+ *  data-tilt     a card tilts gently toward the pointer (fine pointers only)
+ *  data-to-top   a floating control that appears past the first screen and returns to the top
  *  img[data-fade] images fade in once loaded, with an "unavailable" state if they fail
+ *
+ *  The reading-progress bar (.scroll-progress) is driven by CSS where scroll-driven
+ *  animations exist, and by a JavaScript fallback here otherwise.
  */
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
@@ -182,6 +187,83 @@ function initImages() {
   });
 }
 
+/* ---------- Reading progress (fallback for browsers without scroll-timeline) ---------- */
+function initScrollProgress() {
+  const bar = document.querySelector<HTMLElement>('.scroll-progress');
+  if (!bar || reduceMotion.matches) return;
+  // Where supported, CSS drives the bar with a scroll-driven animation; leave it be.
+  const nativeTimeline =
+    typeof CSS !== 'undefined' && typeof CSS.supports === 'function' && CSS.supports('animation-timeline: scroll()');
+  if (nativeTimeline) return;
+
+  let ticking = false;
+  const update = () => {
+    ticking = false;
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = max > 0 ? window.scrollY / max : 0;
+    bar.style.transform = `scaleX(${Math.min(1, Math.max(0, progress))})`;
+  };
+  const onScroll = () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(update);
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll, { passive: true });
+  update();
+}
+
+/* ---------- Back-to-top ---------- */
+function initToTop() {
+  const btn = document.querySelector<HTMLButtonElement>('[data-to-top]');
+  if (!btn) return;
+  btn.hidden = false;
+  let ticking = false;
+  const update = () => {
+    ticking = false;
+    btn.classList.toggle('is-shown', window.scrollY > window.innerHeight * 0.9);
+  };
+  window.addEventListener(
+    'scroll',
+    () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    },
+    { passive: true },
+  );
+  update();
+  btn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+  });
+}
+
+/* ---------- Pointer tilt (fine pointer only) ---------- */
+function initTilt() {
+  if (!finePointer.matches || reduceMotion.matches) return;
+  document.querySelectorAll<HTMLElement>('[data-tilt]').forEach((el) => {
+    let frame = 0;
+    el.addEventListener('pointermove', (event) => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const rect = el.getBoundingClientRect();
+        const px = (event.clientX - rect.left) / rect.width - 0.5;
+        const py = (event.clientY - rect.top) / rect.height - 0.5;
+        el.style.transform = `perspective(900px) rotateX(${(-py * 5).toFixed(2)}deg) rotateY(${(px * 5).toFixed(
+          2,
+        )}deg) translateY(-3px)`;
+      });
+    });
+    el.addEventListener('pointerleave', () => {
+      el.style.transform = '';
+    });
+  });
+}
+
 initScrollStates();
 initMagnetic();
 initImages();
+initScrollProgress();
+initToTop();
+initTilt();

@@ -7,17 +7,17 @@ const year = new Date().getFullYear();
 
 <footer class="site-footer">
   <div class="container footer-inner">
-    <p class="footer-name">
+    <p class="footer-name" data-reveal>
       <span>{site.name}</span>
       <span class="footer-role">{site.title}, {site.shortLocation}</span>
     </p>
-    <ul role="list" class="footer-links">
-      <li><a href={href('/work/')}>All work</a></li>
-      <li><a href={`mailto:${site.email}`}>Email</a></li>
-      <li><a href={site.linkedin} rel="me noopener" target="_blank">LinkedIn<span class="visually-hidden"> (opens in a new tab)</span></a></li>
-      <li><a href="#main">Back to top <span aria-hidden="true">↑</span></a></li>
+    <ul role="list" class="footer-links" data-reveal style="--reveal-delay: 0.08s">
+      <li><a class="link-underline" href={href('/work/')}>All work</a></li>
+      <li><a class="link-underline" href={`mailto:${site.email}`}>Email</a></li>
+      <li><a class="link-underline" href={site.linkedin} rel="me noopener" target="_blank">LinkedIn<span class="visually-hidden"> (opens in a new tab)</span></a></li>
+      <li><a class="link-underline" href="#main">Back to top <span aria-hidden="true">↑</span></a></li>
     </ul>
-    <p class="footer-note">
+    <p class="footer-note" data-reveal style="--reveal-delay: 0.12s">
       © {year} {site.fullName}. Work shown was created for FotoOwl and Technotreon. Company names and logos of
       FotoOwl, Technotreon, Insplore Consultants and Your Growth Partner belong to their owners.
     </p>
@@ -63,7 +63,6 @@ const year = new Date().getFullYear();
 
   .footer-links a:hover {
     color: var(--accent-on-night);
-    text-decoration: underline;
   }
 
   .footer-note {

@@ -107,13 +107,15 @@ const preview = d.previewVideo ? asset(`/media/preview/${d.previewVideo}`) : und
     border-radius: var(--radius-lg);
     transition:
       border-color 0.3s var(--ease),
-      box-shadow 0.4s var(--ease);
+      box-shadow 0.4s var(--ease),
+      transform 0.4s var(--ease);
   }
 
   .card:hover .card-media,
   .card:focus-within .card-media {
     border-color: var(--rule-strong);
     box-shadow: var(--shadow-lift);
+    transform: translateY(-4px);
   }
 
   .card-media :global(img) {
@@ -267,6 +269,11 @@ const preview = d.previewVideo ? asset(`/media/preview/${d.previewVideo}`) : und
     }
 
     .card:hover .card-media :global(img) {
+      transform: none;
+    }
+
+    .card:hover .card-media,
+    .card:focus-within .card-media {
       transform: none;
     }
   }

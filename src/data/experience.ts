@@ -33,7 +33,7 @@ export const experience: Role[] = [
     company: 'Technotreon',
     role: 'Marketing & Growth Associate',
     start: 'Jun 2026',
-    end: 'Present',
+    end: 'Aug 2026',
     points: [
       'Manage digital marketing across 5+ social media platforms: LinkedIn, Instagram, Facebook, YouTube and Reddit, to grow brand visibility and reach.',
       'Set up and optimise Meta Ads campaigns via Meta Business Suite to improve targeting and ad performance.',

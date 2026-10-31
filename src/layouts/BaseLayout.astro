@@ -81,6 +81,9 @@ const structuredData = jsonLd ? JSON.stringify(jsonLd).replace(/</g, '\\u003c') 
       <slot />
     </main>
     <SiteFooter />
+    <button class="to-top" type="button" data-to-top aria-label="Back to top" hidden>
+      <span class="to-top-arrow" aria-hidden="true">↑</span>
+    </button>
     <script>
       import '../scripts/site';
     </script>

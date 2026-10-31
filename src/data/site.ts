@@ -36,7 +36,8 @@ export const site = {
 
   hero: {
     intro:
-      'I design brochures, ads, social posts and website screens, manage social media, SEO and Meta Ads work, and produce product videos with AI-assisted tools.',
-    current: 'Currently Graphics and UI Intern at FotoOwl and Marketing & Growth Associate at Technotreon.',
+      'I create engaging visual designs, digital experiences, marketing creatives and video content. I work across graphic design, UI design, digital marketing, social media, SEO and AI-assisted creative production.',
+    current:
+      'Currently Graphics and UI Intern at FotoOwl, contributing to visual communication and user interface experiences.',
   },
 } as const;

@@ -18,6 +18,7 @@ export const skillGroups: SkillGroup[] = [
     skills: [
       'Brochures and sales collateral',
       'Expo backdrops and event branding',
+      'Branding and visual communication',
       'Social posts and carousels',
       'Ad creatives in feed and story formats',
       'Email and campaign graphics',
@@ -42,6 +43,7 @@ export const skillGroups: SkillGroup[] = [
     skills: [
       'Customer testimonial edits',
       'Product tutorials',
+      'Motion graphics',
       'Captions and B-roll',
       'Landscape and vertical versions',
     ],
@@ -50,7 +52,13 @@ export const skillGroups: SkillGroup[] = [
   {
     discipline: 'AI Creative Production',
     summary: 'Using AI to explore ideas and produce images, video and copy faster.',
-    skills: ['AI image generation', 'AI video generation', 'Prompt engineering', 'AI copywriting'],
+    skills: [
+      'AI image generation',
+      'AI video generation',
+      'AI-assisted content creation',
+      'Prompt engineering',
+      'AI copywriting',
+    ],
     tools: ['Midjourney', 'Adobe Firefly', 'Grok', 'ChatGPT', 'Claude'],
   },
   {
@@ -58,8 +66,9 @@ export const skillGroups: SkillGroup[] = [
     summary: 'Campaigns, content and reporting across social, search and email.',
     skills: [
       'Social media management',
+      'Marketing campaigns',
       'Meta Ads',
-      'SEO and website audits',
+      'SEO and website optimisation',
       'Content and campaign strategy',
       'Community engagement',
       'Email marketing',
