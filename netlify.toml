@@ -1,0 +1,9 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# The Astro config defaults to the GitHub Pages sub-folder (/Prajwal-Vispute-Portfolio).
+# On Netlify the site is served from the domain root, so build with base "/".
+[build.environment]
+  SITE_URL = "https://prajwalvispute.netlify.app"
+  SITE_BASE = "/"
