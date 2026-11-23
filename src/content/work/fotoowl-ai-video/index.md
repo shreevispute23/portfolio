@@ -7,6 +7,8 @@ disciplines: [Video Editing]
 summary: AI-generated video for FotoOwl, produced through creative prompting and prompt engineering.
 order: 6
 status: coming-soon
+# Hidden from the site until the AI video samples are ready. Set to false to publish.
+draft: true
 role: Produced AI-generated video through creative prompting and prompt engineering.
 todo:
   - AI video samples, as MP4 files or links.

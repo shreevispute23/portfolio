@@ -49,6 +49,15 @@
   --radius-lg: 20px;
   --header-h: 4.5rem;
   --ease: cubic-bezier(0.22, 0.7, 0.12, 1);
+
+  /* Motion system (reused by every below-hero effect; the hero does not use these). */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 180ms;
+  --dur-base: 400ms;
+  --dur-slow: 800ms;
+  --stagger: 70ms;
+
   --shadow-soft: 0 1px 2px rgba(23, 23, 23, 0.05), 0 14px 36px -20px rgba(23, 23, 23, 0.22);
   --shadow-lift: 0 2px 4px rgba(23, 23, 23, 0.06), 0 24px 48px -24px rgba(23, 23, 23, 0.3);
 }
@@ -66,6 +75,13 @@ html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   scroll-padding-top: calc(var(--header-h) + 1rem);
+  /* No sideways scroll at any width; vertical scrolling and the full-bleed
+     marquee are unaffected (clip, not hidden). */
+  overflow-x: clip;
+}
+
+body {
+  overflow-x: clip;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -571,6 +587,63 @@ a:focus-visible > .arrow {
   transform: none;
 }
 
+/* The grey second half of a two-part heading fades in just after the black half,
+   instead of sliding, for a softer finish. */
+.js [data-split] .split-i.is-tone {
+  transform: none;
+  opacity: 0;
+  transition: opacity var(--dur-base) var(--ease-out);
+  transition-delay: calc(var(--split-delay, 0s) + min(var(--i, 0), 18) * 0.045s + 120ms);
+}
+
+.js [data-split].is-visible .split-i.is-tone {
+  opacity: 1;
+}
+
+/* Reveal variants (below the hero). Base [data-reveal] stays the existing fade-up. */
+.js [data-reveal='fade-in'] {
+  opacity: 0;
+  transform: none;
+  transition: opacity var(--dur-slow) var(--ease-out);
+  transition-delay: var(--reveal-delay, 0s);
+}
+
+.js [data-reveal='fade-in'].is-visible {
+  opacity: 1;
+}
+
+.js [data-reveal='scale-in'] {
+  opacity: 0;
+  transform: scale(0.96);
+  transform-origin: center;
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
+  transition-delay: var(--reveal-delay, 0s);
+}
+
+.js [data-reveal='scale-in'].is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* mask-up: a single line rises from behind a clip. Wrap the text in one child element. */
+.js [data-reveal='mask-up'] {
+  overflow: clip;
+  overflow-clip-margin: 0.15em;
+}
+
+.js [data-reveal='mask-up'] > * {
+  display: inline-block;
+  transform: translateY(110%);
+  transition: transform var(--dur-slow) var(--ease-out);
+  transition-delay: var(--reveal-delay, 0s);
+}
+
+.js [data-reveal='mask-up'].is-visible > * {
+  transform: none;
+}
+
 /* Image frames open from a smaller rounded mask while the image settles. */
 .js [data-mask] {
   clip-path: inset(7% 5% 7% 5% round var(--radius-lg));
@@ -669,6 +742,16 @@ a:focus-visible > .arrow {
   }
 
   .js [data-split] .split-i {
+    transform: none;
+    transition: none;
+  }
+
+  .js [data-split] .split-i.is-tone {
+    opacity: 1;
+    transition: none;
+  }
+
+  .js [data-reveal='mask-up'] > * {
     transform: none;
     transition: none;
   }

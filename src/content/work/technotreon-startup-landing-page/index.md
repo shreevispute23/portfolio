@@ -8,8 +8,8 @@ summary: A responsive landing page for Technotreon’s startup patent services, 
 order: 10
 featured: true
 featuredOrder: 4
-cover: ./cover.jpg
-coverAlt: The Technotreon startup landing page at desktop and phone sizes, with the headline India’s Innovation Company for Startups.
+cover: ./images/desktop-hero.jpg
+coverAlt: The Technotreon startup landing page hero at desktop width, with the headline India’s Innovation Company for Startups and two calls to action.
 overview: >-
   A single-page site written for startup founders. It opens with the positioning “India’s Innovation Company for
   Startups” and two calls to action, then works through short case stories on IP mistakes and wins, a featured patent

@@ -73,7 +73,6 @@ export const chapters: Chapter[] = [
     facts: [
       { value: '5+', label: 'social platforms managed: LinkedIn, Instagram, Facebook, YouTube and Reddit', where: 'Technotreon' },
       { value: '15+', label: 'SEO and UX improvements recommended from website audits', where: 'Technotreon' },
-      { value: 'Meta Ads', label: 'campaigns set up and optimised in Meta Business Suite', where: 'Technotreon' },
       { value: '100+', label: 'respondents in primary research on influencer credibility', where: 'Your Growth Partner' },
     ],
     toolGroups: [

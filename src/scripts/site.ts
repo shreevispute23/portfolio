@@ -1,153 +1,18 @@
 /**
- * Motion and small enhancements shared by every page. Everything stays visible and usable
+ * Small enhancements not yet moved into src/scripts/motion/. Everything stays usable
  * without JavaScript, and motion is skipped for visitors who prefer reduced motion.
  *
- *  data-reveal   fade and rise when scrolled into view
- *  data-mask     image frame opens from a smaller rounded mask while the image settles
- *  data-split    headline words slide up from behind a mask, one after another
- *  data-count    a figure such as "15+" counts up once
  *  data-magnetic a button eases toward the pointer
  *  data-tilt     a card tilts gently toward the pointer (fine pointers only)
  *  data-to-top   a floating control that appears past the first screen and returns to the top
  *  img[data-fade] images fade in once loaded, with an "unavailable" state if they fail
  *
- *  The reading-progress bar (.scroll-progress) is driven by CSS where scroll-driven
- *  animations exist, and by a JavaScript fallback here otherwise.
+ *  Scroll reveals, headline splits and count-up figures now live in src/scripts/motion/.
+ *  The reading-progress bar is CSS-driven where scroll timelines exist, with the JS
+ *  fallback below otherwise.
  */
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
-
-/* ---------- Split headlines ---------- */
-function splitWords(el: HTMLElement) {
-  if (el.dataset.splitDone) return;
-  el.dataset.splitDone = 'true';
-  const label = (el.textContent ?? '').replace(/\s+/g, ' ').trim();
-  let index = 0;
-
-  const build = (source: Node, target: Node, topLevel: boolean) => {
-    source.childNodes.forEach((node) => {
-      if (node.nodeType === Node.TEXT_NODE) {
-        (node.textContent ?? '').split(/(\s+)/).forEach((part) => {
-          if (!part) return;
-          if (/^\s+$/.test(part)) {
-            target.appendChild(document.createTextNode(' '));
-            return;
-          }
-          const outer = document.createElement('span');
-          outer.className = 'split-w';
-          if (topLevel) outer.setAttribute('aria-hidden', 'true');
-          const inner = document.createElement('span');
-          inner.className = 'split-i';
-          inner.style.setProperty('--i', String(index++));
-          inner.textContent = part;
-          outer.appendChild(inner);
-          target.appendChild(outer);
-        });
-      } else if (node.nodeType === Node.ELEMENT_NODE) {
-        const clone = (node as Element).cloneNode(false) as HTMLElement;
-        clone.removeAttribute('id');
-        if (topLevel) clone.setAttribute('aria-hidden', 'true');
-        build(node, clone, false);
-        target.appendChild(clone);
-      }
-    });
-  };
-
-  const fragment = document.createDocumentFragment();
-  const readable = document.createElement('span');
-  readable.className = 'visually-hidden';
-  readable.textContent = label;
-  fragment.appendChild(readable);
-  build(el, fragment, true);
-  el.replaceChildren(fragment);
-}
-
-/* ---------- Count-up figures ---------- */
-function prepareCount(el: HTMLElement) {
-  const text = (el.textContent ?? '').trim();
-  const match = text.match(/^(\d+)(.*)$/);
-  if (!match) return false;
-  // Screen readers get the final figure; the animated copy is hidden from them.
-  const readable = document.createElement('span');
-  readable.className = 'visually-hidden';
-  readable.textContent = text;
-  const display = document.createElement('span');
-  display.setAttribute('aria-hidden', 'true');
-  display.dataset.countDisplay = '';
-  display.textContent = `0${match[2]}`;
-  el.replaceChildren(readable, display);
-  el.dataset.countTo = match[1];
-  el.dataset.countSuffix = match[2];
-  return true;
-}
-
-function runCount(el: HTMLElement) {
-  const to = Number(el.dataset.countTo);
-  const suffix = el.dataset.countSuffix ?? '';
-  const display = el.querySelector<HTMLElement>('[data-count-display]');
-  if (!Number.isFinite(to) || !display) return;
-  const duration = 1100 + Math.min(900, to * 6);
-  const start = performance.now();
-  const step = (now: number) => {
-    const t = Math.min(1, (now - start) / duration);
-    const eased = 1 - Math.pow(1 - t, 3);
-    display.textContent = `${Math.round(to * eased)}${suffix}`;
-    if (t < 1) requestAnimationFrame(step);
-  };
-  requestAnimationFrame(step);
-}
-
-/* ---------- Scroll-triggered states ---------- */
-function show(el: HTMLElement) {
-  if (el.classList.contains('is-visible')) return;
-  el.classList.add('is-visible');
-  if (el.dataset.countTo) runCount(el);
-  if (el.hasAttribute('data-mask')) {
-    // Drop the mask once it has opened, so focus outlines and hover shadows are never clipped.
-    const done = () => el.classList.add('mask-done');
-    el.addEventListener('transitionend', (event) => event.propertyName === 'clip-path' && done(), { once: true });
-    window.setTimeout(done, 1500);
-  }
-}
-
-function initScrollStates() {
-  const targets = [...document.querySelectorAll<HTMLElement>('[data-reveal], [data-mask], [data-split], [data-count]')];
-
-  if (reduceMotion.matches || !('IntersectionObserver' in window)) {
-    targets.forEach((el) => el.classList.add('is-visible'));
-    return;
-  }
-
-  targets.forEach((el) => {
-    if (el.hasAttribute('data-split')) splitWords(el);
-    if (el.hasAttribute('data-count') && !prepareCount(el)) el.removeAttribute('data-count');
-  });
-
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        show(entry.target as HTMLElement);
-        observer.unobserve(entry.target);
-      });
-    },
-    { rootMargin: '0px 0px -8% 0px', threshold: 0.08 },
-  );
-  targets.forEach((el) => observer.observe(el));
-
-  const revealAll = () => targets.forEach(show);
-  window.addEventListener('beforeprint', revealAll);
-
-  // Content reached through an in-page link (e.g. #experience-fotoowl) is shown straight away.
-  const revealTarget = () => {
-    const id = decodeURIComponent(window.location.hash.slice(1));
-    const target = id ? document.getElementById(id) : null;
-    if (!target) return;
-    [target, ...target.querySelectorAll<HTMLElement>('[data-reveal], [data-mask], [data-split], [data-count]')].forEach(show);
-  };
-  window.addEventListener('hashchange', revealTarget);
-  revealTarget();
-}
 
 /* ---------- Magnetic buttons ---------- */
 function initMagnetic() {
@@ -191,7 +56,6 @@ function initImages() {
 function initScrollProgress() {
   const bar = document.querySelector<HTMLElement>('.scroll-progress');
   if (!bar || reduceMotion.matches) return;
-  // Where supported, CSS drives the bar with a scroll-driven animation; leave it be.
   const nativeTimeline =
     typeof CSS !== 'undefined' && typeof CSS.supports === 'function' && CSS.supports('animation-timeline: scroll()');
   if (nativeTimeline) return;
@@ -261,9 +125,33 @@ function initTilt() {
   });
 }
 
-initScrollStates();
+/* ---------- Home work-grid filter tabs ---------- */
+function initWorkTabs() {
+  const root = document.querySelector<HTMLElement>('[data-work-tabs]');
+  const grid = document.querySelector<HTMLElement>('[data-work-grid-home]');
+  if (!root || !grid) return;
+  const buttons = [...root.querySelectorAll<HTMLButtonElement>('button[data-filter]')];
+  const items = [...grid.querySelectorAll<HTMLElement>(':scope > li')];
+  const status = root.querySelector<HTMLElement>('[data-tab-status]');
+
+  const apply = (value: string) => {
+    const filter = buttons.some((b) => b.dataset.filter === value) ? value : 'all';
+    let shown = 0;
+    items.forEach((item) => {
+      const match = filter === 'all' || (item.dataset.group ?? '').split(' ').includes(filter);
+      item.hidden = !match;
+      if (match) shown++;
+    });
+    buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.filter === filter)));
+    if (status) status.textContent = `Showing ${shown} ${shown === 1 ? 'project' : 'projects'}.`;
+  };
+
+  buttons.forEach((b) => b.addEventListener('click', () => apply(b.dataset.filter ?? 'all')));
+}
+
 initMagnetic();
 initImages();
 initScrollProgress();
 initToTop();
 initTilt();
+initWorkTabs();

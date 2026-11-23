@@ -1,7 +1,6 @@
 ---
 import { Image } from 'astro:assets';
 import portrait from '../assets/portrait.png';
-import Chapter from '../components/Chapter.astro';
 import ContactBlock from '../components/ContactBlock.astro';
 import DotField from '../components/DotField.astro';
 import ExperienceTimeline from '../components/ExperienceTimeline.astro';
@@ -14,11 +13,36 @@ import { certifications, education, experience, research } from '../data/experie
 import { site } from '../data/site';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { href } from '../lib/paths';
-import { getFeatured, getWork } from '../lib/work';
+import { getFeatured, getWork, type Work } from '../lib/work';
 
 const all = await getWork();
 const featured = await getFeatured();
-const numberOf = (id: string) => all.findIndex((w) => w.id === id) + 1;
+
+/** Filter tabs on the home work grid map the five disciplines onto three groups. */
+type WorkGroup = 'design' | 'marketing' | 'video';
+const groupMap: Record<string, WorkGroup> = {
+  'Graphic Design': 'design',
+  'UI Design': 'design',
+  'Digital Marketing': 'marketing',
+  'Video Editing': 'video',
+  'AI Creative Production': 'video',
+};
+// Filter by the project's primary discipline so each card lives under exactly one tab.
+const groupOf = (work: Work): WorkGroup[] => {
+  const g = groupMap[work.data.discipline];
+  return g ? [g] : [];
+};
+const groups = [
+  { key: 'all', label: 'All' },
+  { key: 'design', label: 'Design' },
+  { key: 'marketing', label: 'Marketing' },
+  { key: 'video', label: 'Video & AI' },
+] as const;
+const groupCount = (key: string) =>
+  key === 'all' ? featured.length : featured.filter((w) => groupOf(w).includes(key as WorkGroup)).length;
+
+/** Scope figures shown in the stats band (relocated from the old Marketing chapter). */
+const marketingFacts = chapters.find((c) => c.id === 'marketing')?.facts ?? [];
 
 const siteUrl = new URL(href('/'), Astro.site).toString();
 const jsonLd = {
@@ -68,12 +92,20 @@ const jsonLd = {
 
     <div class="container hero-content">
       <div class="hero-grid">
-        <p class="hero-eyebrow eyebrow" data-reveal>
-          <span class="dot" aria-hidden="true"></span>
-          <span>Portfolio</span>
-          <span aria-hidden="true">·</span>
-          <span>{site.shortLocation}</span>
-        </p>
+        <div class="hero-head">
+          <p class="hero-eyebrow eyebrow" data-reveal>
+            <span class="dot" aria-hidden="true"></span>
+            <span>Portfolio</span>
+            <span aria-hidden="true">·</span>
+            <span>{site.shortLocation}</span>
+          </p>
+          <p class="hero-tagline" data-reveal style="--reveal-delay: 0.08s">
+            Creative &amp; Digital Marketing <span class="hero-tagline-accent">Professional</span>
+          </p>
+          <p class="hero-subline" data-reveal style="--reveal-delay: 0.12s">
+            <span>Design · UI · Marketing · Video &amp; AI</span>
+          </p>
+        </div>
         <h1 class="hero-title visually-hidden" id="hero-title">
           {site.name}, {site.positioning.lead} {site.positioning.tone}
         </h1>
@@ -138,39 +170,85 @@ const jsonLd = {
         </h2>
         <div class="section-aside">
           <p class="section-intro" data-reveal>
-            Six projects that show the range: a product brochure, Meta ads, customer and tutorial videos, a landing page and
-            social content. Each opens into a full case study.
-          </p>
-          <p class="aside-link" data-reveal style="--reveal-delay: 0.08s">
-            <a class="text-link" href={href('/work/')}>
-              All {all.length} projects <span class="arrow" aria-hidden="true">→</span>
-            </a>
+            Six projects that show the range: a product brochure, Meta ads, customer and tutorial videos, a landing page
+            and social content. Each opens into a full case study.
           </p>
         </div>
       </header>
 
-      <ul role="list" class="feature-grid">
+      {/* Discipline summary: short intro and tools for each area, no repeated project previews. */}
+      <ul role="list" class="work-summary">
         {
-          featured.map((work, i) => {
-            const large = i % 4 === 0 || i % 4 === 3;
-            return (
-              <li class="feature-item" data-reveal>
-                <ProjectCard
-                  work={work}
-                  number={numberOf(work.id)}
-                  size={large ? 'large' : 'medium'}
-                  eager={i < 2}
-                  morph
-                />
-              </li>
-            );
-          })
+          chapters.map((chapter) => (
+            <li class="work-summary-item" id={chapter.id} data-reveal>
+              <p class="work-summary-label mono">
+                <span class="num">{chapter.number}</span> {chapter.label}
+              </p>
+              <p class="work-summary-intro">{chapter.intro}</p>
+              <ul role="list" class="work-summary-tools">
+                {chapter.toolGroups
+                  ?.flatMap((g) => g.tools)
+                  .slice(0, 6)
+                  .map((tool) => (
+                    <li class="tag">{tool}</li>
+                  ))}
+              </ul>
+            </li>
+          ))
+        }
+      </ul>
+
+      {/* Filter tabs for the six featured projects. */}
+      <div class="work-tabs" data-work-tabs>
+        <p class="work-tabs-label mono" id="work-tabs-label">Filter</p>
+        <div class="work-tab-buttons" role="group" aria-labelledby="work-tabs-label">
+          {
+            groups.map((g, i) => (
+              <button type="button" class="work-tab" aria-pressed={i === 0 ? 'true' : 'false'} data-filter={g.key}>
+                {g.label} <span class="work-tab-count">{groupCount(g.key)}</span>
+              </button>
+            ))
+          }
+        </div>
+        <p class="work-tab-status mono" data-tab-status role="status" aria-live="polite"></p>
+      </div>
+
+      <ul role="list" class="feature-grid" data-work-grid-home data-reveal-group>
+        {
+          featured.map((work, i) => (
+            <li class="feature-item" data-group={groupOf(work).join(' ')} data-reveal>
+              <ProjectCard work={work} number={i + 1} size="medium" eager={i < 2} morph />
+            </li>
+          ))
+        }
+      </ul>
+
+      <p class="work-all">
+        <a class="text-link" href={href('/work/')}>
+          All {all.length} projects <span class="arrow" aria-hidden="true">→</span>
+        </a>
+      </p>
+    </div>
+  </section>
+
+  <section class="section stats" aria-labelledby="stats-title">
+    <div class="container">
+      <h2 class="visually-hidden" id="stats-title">Scope of the work</h2>
+      <ul role="list" class="stats-grid" data-reveal-group>
+        {
+          marketingFacts.map((fact) => (
+            <li class="stat" data-reveal>
+              <span class="stat-value" data-count>
+                {fact.value}
+              </span>
+              <span class="stat-label">{fact.label}</span>
+              <span class="stat-where mono">{fact.where}</span>
+            </li>
+          ))
         }
       </ul>
     </div>
   </section>
-
-  {chapters.map((chapter) => <Chapter chapter={chapter} />)}
 
   <section class="section experience" id="experience" aria-labelledby="experience-title">
     <div class="container">
@@ -275,8 +353,67 @@ const jsonLd = {
   .hero {
     position: relative;
     isolation: isolate;
+    /* The name marquee escapes the container to 100vw; clip keeps it edge-to-edge
+       while preventing any sideways scrollbar at every width. */
+    overflow-x: clip;
     padding-top: clamp(2rem, 5vw, 4rem);
     padding-bottom: clamp(1rem, 3vw, 2rem);
+  }
+
+  /* Label + tagline + sub line, grouped so their spacing is exact and independent
+     of the hero grid row-gap. Sits above the marquee, left-aligned to the nav. */
+  .hero-head {
+    grid-column: 1 / -1;
+    position: relative;
+    z-index: 3;
+  }
+
+  .hero-tagline {
+    margin-top: 8px;
+    font-family: var(--sans);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    font-size: clamp(24px, 1.95vw, 34px);
+    color: #141414;
+  }
+
+  /* Keep the title on a single line on desktop; it wraps only when too narrow. */
+  @media (min-width: 900px) {
+    .hero-tagline {
+      white-space: nowrap;
+    }
+  }
+
+  .hero-tagline-accent {
+    color: var(--accent);
+  }
+
+  .hero-subline {
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 32px;
+    font-family: var(--sans);
+    font-weight: 500;
+    font-size: clamp(16px, 1.3vw, 22px);
+    color: #6b6b6b;
+  }
+
+  /* Thin rule trailing the sub line, vertically centred with the text. */
+  .hero-subline::after {
+    content: '';
+    flex: 0 0 auto;
+    height: 1px;
+    width: clamp(100px, 11vw, 190px);
+    background: #bdbdbd;
+  }
+
+  @media (max-width: 640px) {
+    .hero-subline::after {
+      display: none;
+    }
   }
 
   .hero-content {
@@ -494,45 +631,179 @@ const jsonLd = {
     border-top: 1px solid var(--rule);
   }
 
-  .aside-link {
-    margin-top: 1rem;
+  /* Discipline summary strip: replaces the old category sections and accordions. */
+  .work-summary {
+    display: grid;
+    gap: var(--gap);
+    grid-template-columns: minmax(0, 1fr);
+    margin-bottom: clamp(2.5rem, 5vw, 4rem);
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
   }
 
+  @media (min-width: 760px) {
+    .work-summary {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .work-summary-item {
+    display: grid;
+    gap: 0.75rem;
+    align-content: start;
+  }
+
+  .work-summary-label {
+    font-size: var(--step--2);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .work-summary-label .num {
+    color: var(--accent);
+  }
+
+  .work-summary-intro {
+    font-size: var(--step--1);
+    line-height: 1.55;
+    color: var(--ink-2);
+  }
+
+  .work-summary-tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.1rem;
+  }
+
+  /* Filter tabs. */
+  .work-tabs {
+    display: grid;
+    gap: 0.75rem;
+    margin-bottom: clamp(1.75rem, 3.5vw, 2.5rem);
+    padding-block: 1rem;
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .work-tabs-label {
+    font-size: var(--step--2);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .work-tab-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .work-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0.5rem 1.1rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    background: transparent;
+    font-size: var(--step--1);
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+      background-color 0.2s var(--ease),
+      color 0.2s var(--ease),
+      border-color 0.2s var(--ease);
+  }
+
+  .work-tab:hover {
+    border-color: var(--ink);
+  }
+
+  .work-tab[aria-pressed='true'] {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
+  }
+
+  .work-tab-count {
+    font-family: var(--mono);
+    font-size: var(--step--2);
+    opacity: 0.7;
+  }
+
+  .work-tab-status {
+    min-height: 1.3em;
+    font-size: var(--step--2);
+    color: var(--muted);
+  }
+
+  /* Even project grid: one consistent card size and aspect ratio. */
   .feature-grid {
     display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+    gap: clamp(2.5rem, 4vw, 3.5rem) var(--gap);
+  }
+
+  .feature-item[hidden] {
+    display: none;
+  }
+
+  .work-all {
+    margin-top: clamp(2.5rem, 5vw, 3.5rem);
+    text-align: center;
+    font-size: var(--step-1);
+  }
+
+  /* Stats band (scope figures, big number + short label). */
+  .stats {
+    border-top: 1px solid var(--rule);
+    padding-block: clamp(3rem, 6vw, 5rem);
+  }
+
+  .stats-grid {
+    display: grid;
+    gap: 0.75rem;
     grid-template-columns: minmax(0, 1fr);
-    gap: clamp(3rem, 6vw, 5rem) var(--gap);
   }
 
   @media (min-width: 640px) {
-    .feature-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+    .stats-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
   }
 
-  @media (min-width: 900px) {
-    .feature-grid {
-      grid-template-columns: repeat(12, minmax(0, 1fr));
-      column-gap: clamp(1.5rem, 3vw, 3rem);
-    }
+  .stat {
+    display: grid;
+    align-content: start;
+    gap: 0.4rem;
+    padding: clamp(1.25rem, 2.2vw, 1.75rem);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
 
-    .feature-item:nth-child(4n + 1) {
-      grid-column: 1 / span 7;
-    }
+  .stat-value {
+    font-size: var(--step-4);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: var(--ink);
+  }
 
-    .feature-item:nth-child(4n + 2) {
-      grid-column: 8 / span 5;
-      align-self: end;
-    }
+  .stat-label {
+    font-size: var(--step--1);
+    line-height: 1.45;
+    color: var(--ink-2);
+  }
 
-    .feature-item:nth-child(4n + 3) {
-      grid-column: 1 / span 5;
-      align-self: end;
-    }
-
-    .feature-item:nth-child(4n + 4) {
-      grid-column: 6 / span 7;
-    }
+  .stat-where {
+    font-size: var(--step--2);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--muted);
   }
 
   /* Experience */
