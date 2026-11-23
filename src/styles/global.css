@@ -526,12 +526,12 @@ a:focus-visible > .arrow {
   height: auto;
 }
 
-.js img[data-fade] {
+.js-ready img[data-fade] {
   opacity: 0;
   transition: opacity 0.6s var(--ease);
 }
 
-.js img[data-fade].is-loaded {
+.js-ready img[data-fade].is-loaded {
   opacity: 1;
 }
 
@@ -549,7 +549,7 @@ a:focus-visible > .arrow {
 /* ==========================================================================
    Scroll reveal (progressive enhancement; content is visible without JS)
    ========================================================================== */
-.js [data-reveal] {
+.js-ready [data-reveal] {
   opacity: 0;
   transform: translateY(1.25rem);
   transition:
@@ -558,7 +558,7 @@ a:focus-visible > .arrow {
   transition-delay: var(--reveal-delay, 0s);
 }
 
-.js [data-reveal].is-visible {
+.js-ready [data-reveal].is-visible {
   opacity: 1;
   transform: none;
 }
@@ -577,42 +577,42 @@ a:focus-visible > .arrow {
   display: inline-block;
 }
 
-.js [data-split] .split-i {
+.js-ready [data-split] .split-i {
   transform: translateY(108%);
   transition: transform 1s var(--ease);
   transition-delay: calc(var(--split-delay, 0s) + min(var(--i, 0), 18) * 0.045s);
 }
 
-.js [data-split].is-visible .split-i {
+.js-ready [data-split].is-visible .split-i {
   transform: none;
 }
 
 /* The grey second half of a two-part heading fades in just after the black half,
    instead of sliding, for a softer finish. */
-.js [data-split] .split-i.is-tone {
+.js-ready [data-split] .split-i.is-tone {
   transform: none;
   opacity: 0;
   transition: opacity var(--dur-base) var(--ease-out);
   transition-delay: calc(var(--split-delay, 0s) + min(var(--i, 0), 18) * 0.045s + 120ms);
 }
 
-.js [data-split].is-visible .split-i.is-tone {
+.js-ready [data-split].is-visible .split-i.is-tone {
   opacity: 1;
 }
 
 /* Reveal variants (below the hero). Base [data-reveal] stays the existing fade-up. */
-.js [data-reveal='fade-in'] {
+.js-ready [data-reveal='fade-in'] {
   opacity: 0;
   transform: none;
   transition: opacity var(--dur-slow) var(--ease-out);
   transition-delay: var(--reveal-delay, 0s);
 }
 
-.js [data-reveal='fade-in'].is-visible {
+.js-ready [data-reveal='fade-in'].is-visible {
   opacity: 1;
 }
 
-.js [data-reveal='scale-in'] {
+.js-ready [data-reveal='scale-in'] {
   opacity: 0;
   transform: scale(0.96);
   transform-origin: center;
@@ -622,35 +622,35 @@ a:focus-visible > .arrow {
   transition-delay: var(--reveal-delay, 0s);
 }
 
-.js [data-reveal='scale-in'].is-visible {
+.js-ready [data-reveal='scale-in'].is-visible {
   opacity: 1;
   transform: none;
 }
 
 /* mask-up: a single line rises from behind a clip. Wrap the text in one child element. */
-.js [data-reveal='mask-up'] {
+.js-ready [data-reveal='mask-up'] {
   overflow: clip;
   overflow-clip-margin: 0.15em;
 }
 
-.js [data-reveal='mask-up'] > * {
+.js-ready [data-reveal='mask-up'] > * {
   display: inline-block;
   transform: translateY(110%);
   transition: transform var(--dur-slow) var(--ease-out);
   transition-delay: var(--reveal-delay, 0s);
 }
 
-.js [data-reveal='mask-up'].is-visible > * {
+.js-ready [data-reveal='mask-up'].is-visible > * {
   transform: none;
 }
 
 /* Image frames open from a smaller rounded mask while the image settles. */
-.js [data-mask] {
+.js-ready [data-mask] {
   clip-path: inset(7% 5% 7% 5% round var(--radius-lg));
   transition: clip-path 1.2s var(--ease);
 }
 
-.js [data-mask] img {
+.js-ready [data-mask] img {
   scale: 1.1;
   transition:
     scale 1.6s var(--ease),
@@ -658,15 +658,15 @@ a:focus-visible > .arrow {
     transform 0.9s var(--ease);
 }
 
-.js [data-mask].is-visible {
+.js-ready [data-mask].is-visible {
   clip-path: inset(0 0 0 0 round var(--radius-lg));
 }
 
-.js [data-mask].mask-done {
+.js-ready [data-mask].mask-done {
   clip-path: none;
 }
 
-.js [data-mask].is-visible img {
+.js-ready [data-mask].is-visible img {
   scale: 1;
 }
 
@@ -729,43 +729,80 @@ a:focus-visible > .arrow {
   }
 }
 
+/* Reduced motion SOFTENS below-hero reveals to a short fade; it never removes content.
+   Driven by the .reduce-motion class set by the boot, so ?motion=on (which omits that
+   class) forces full motion. The hero is excluded via :not(.hero *). */
+html.reduce-motion [data-reveal]:not(.hero *) {
+  transform: none !important;
+  transition: opacity 150ms var(--ease-out) !important;
+}
+
+html.reduce-motion img[data-fade]:not(.hero *) {
+  transition: opacity 150ms var(--ease-out) !important;
+}
+
+html.reduce-motion [data-split]:not(.hero *) .split-i {
+  transform: none !important;
+  opacity: 0;
+  transition: opacity 150ms var(--ease-out) !important;
+}
+
+html.reduce-motion [data-split]:not(.hero *).is-visible .split-i {
+  opacity: 1;
+}
+
+html.reduce-motion [data-split]:not(.hero *) .split-i.is-tone {
+  opacity: 0;
+  transition: opacity 150ms var(--ease-out) !important;
+}
+
+html.reduce-motion [data-reveal='mask-up']:not(.hero *) > * {
+  transform: none !important;
+  opacity: 0;
+  transition: opacity 150ms var(--ease-out) !important;
+}
+
+html.reduce-motion [data-reveal='mask-up']:not(.hero *).is-visible > * {
+  opacity: 1;
+}
+
+html.reduce-motion [data-mask]:not(.hero *) {
+  clip-path: none !important;
+  transition: opacity 150ms var(--ease-out) !important;
+}
+
+html.reduce-motion [data-mask]:not(.hero *) img {
+  scale: 1 !important;
+  transition: none !important;
+}
+
+/* The hero keeps its original reduced-motion behaviour: instant, no animation. */
 @media (prefers-reduced-motion: reduce) {
-  .js [data-reveal] {
+  .js-ready .hero [data-reveal],
+  .js-ready .hero img[data-fade] {
     opacity: 1;
     transform: none;
-    transition: none;
-  }
-
-  .js img[data-fade] {
-    opacity: 1;
-    transition: none;
-  }
-
-  .js [data-split] .split-i {
-    transform: none;
-    transition: none;
-  }
-
-  .js [data-split] .split-i.is-tone {
-    opacity: 1;
-    transition: none;
-  }
-
-  .js [data-reveal='mask-up'] > * {
-    transform: none;
-    transition: none;
-  }
-
-  .js [data-mask],
-  .js [data-mask] img {
-    clip-path: none;
-    scale: 1;
     transition: none;
   }
 
   .scroll-progress {
     display: none;
   }
+}
+
+/* Safety net: if the motion modules do not run within 1.5s, reveal everything. */
+html.motion-failsafe [data-reveal],
+html.motion-failsafe [data-reveal='mask-up'] > *,
+html.motion-failsafe [data-split] .split-i,
+html.motion-failsafe [data-split] .split-i.is-tone,
+html.motion-failsafe [data-mask] {
+  opacity: 1 !important;
+  transform: none !important;
+  clip-path: none !important;
+}
+
+html.motion-failsafe img[data-fade] {
+  opacity: 1 !important;
 }
 
 /* Cross-page transitions in browsers that support them. Project covers morph between the

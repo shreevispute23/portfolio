@@ -69,7 +69,22 @@ const structuredData = jsonLd ? JSON.stringify(jsonLd).replace(/</g, '\\u003c') 
     <Font cssVariable="--font-sans" preload />
     <Font cssVariable="--font-mono" />
     <script is:inline>
-      document.documentElement.classList.add('js');
+      // Motion boot: runs before paint, no imports, base-path independent.
+      // - Enables the hidden initial states (js-ready) only now that a script is running.
+      // - Effects are ON by default. Reduced motion only softens (handled in CSS via
+      //   .reduce-motion); ?motion=on forces full motion.
+      // - Safety: if the motion modules have not run within 1.5s, reveal everything.
+      (function () {
+        var el = document.documentElement;
+        var forceMotion = /[?&]motion=on(&|$)/.test(location.search);
+        var reduced = !forceMotion && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        el.classList.add('js-ready');
+        if (reduced) el.classList.add('reduce-motion');
+        if (forceMotion) el.classList.add('force-motion');
+        window.setTimeout(function () {
+          if (!el.classList.contains('motion-ran')) el.classList.add('motion-failsafe');
+        }, 1500);
+      })();
     </script>
     {structuredData && <script type="application/ld+json" set:html={structuredData} />}
   </head>

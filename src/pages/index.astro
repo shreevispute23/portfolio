@@ -8,6 +8,7 @@ import HeroStage from '../components/HeroStage.astro';
 import LogoStrip from '../components/LogoStrip.astro';
 import ProjectCard from '../components/ProjectCard.astro';
 import SkillsGrid from '../components/SkillsGrid.astro';
+import StatsSection from '../components/StatsSection.astro';
 import { chapters } from '../data/chapters';
 import { certifications, education, experience, research } from '../data/experience';
 import { site } from '../data/site';
@@ -41,8 +42,7 @@ const groups = [
 const groupCount = (key: string) =>
   key === 'all' ? featured.length : featured.filter((w) => groupOf(w).includes(key as WorkGroup)).length;
 
-/** Scope figures shown in the stats band (relocated from the old Marketing chapter). */
-const marketingFacts = chapters.find((c) => c.id === 'marketing')?.facts ?? [];
+
 
 const siteUrl = new URL(href('/'), Astro.site).toString();
 const jsonLd = {
@@ -231,24 +231,7 @@ const jsonLd = {
     </div>
   </section>
 
-  <section class="section stats" aria-labelledby="stats-title">
-    <div class="container">
-      <h2 class="visually-hidden" id="stats-title">Scope of the work</h2>
-      <ul role="list" class="stats-grid" data-reveal-group>
-        {
-          marketingFacts.map((fact) => (
-            <li class="stat" data-reveal>
-              <span class="stat-value" data-count>
-                {fact.value}
-              </span>
-              <span class="stat-label">{fact.label}</span>
-              <span class="stat-where mono">{fact.where}</span>
-            </li>
-          ))
-        }
-      </ul>
-    </div>
-  </section>
+  <StatsSection />
 
   <section class="section experience" id="experience" aria-labelledby="experience-title">
     <div class="container">
@@ -755,55 +738,6 @@ const jsonLd = {
     margin-top: clamp(2.5rem, 5vw, 3.5rem);
     text-align: center;
     font-size: var(--step-1);
-  }
-
-  /* Stats band (scope figures, big number + short label). */
-  .stats {
-    border-top: 1px solid var(--rule);
-    padding-block: clamp(3rem, 6vw, 5rem);
-  }
-
-  .stats-grid {
-    display: grid;
-    gap: 0.75rem;
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  @media (min-width: 640px) {
-    .stats-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-  }
-
-  .stat {
-    display: grid;
-    align-content: start;
-    gap: 0.4rem;
-    padding: clamp(1.25rem, 2.2vw, 1.75rem);
-    border: 1px solid var(--rule);
-    border-radius: var(--radius);
-    background: var(--surface);
-  }
-
-  .stat-value {
-    font-size: var(--step-4);
-    font-weight: 500;
-    letter-spacing: -0.03em;
-    line-height: 1;
-    color: var(--ink);
-  }
-
-  .stat-label {
-    font-size: var(--step--1);
-    line-height: 1.45;
-    color: var(--ink-2);
-  }
-
-  .stat-where {
-    font-size: var(--step--2);
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-    color: var(--muted);
   }
 
   /* Experience */

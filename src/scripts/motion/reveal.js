@@ -8,10 +8,10 @@
  *   data-mask                an image frame opens from a rounded mask
  *
  * Reveals run once, when ~15% of the element is in view. Content is fully visible
- * without JavaScript (the initial hidden state needs the .js class on <html>), and
- * reduced motion shows everything immediately.
+ * without JavaScript (the hidden initial state needs the js-ready class on <html>).
+ * Reveals run for everyone; reduced motion is softened to a short fade in CSS, not
+ * skipped here, so the motion stays visible by default.
  */
-const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 /** Wrap each word of a headline in spans so it can slide up line by line. */
 function splitWords(el) {
@@ -86,8 +86,8 @@ export function initReveal() {
     });
   });
 
-  // No motion, or no observer: reveal everything up front.
-  if (reduceMotion.matches || !('IntersectionObserver' in window)) {
+  // No IntersectionObserver: reveal everything up front.
+  if (!('IntersectionObserver' in window)) {
     targets.forEach((el) => {
       if (el.hasAttribute('data-split')) splitWords(el);
       el.classList.add('is-visible');

@@ -1,9 +1,10 @@
 /**
  * Count-up figures. A [data-count] element whose text begins with a number (e.g. "15+")
  * animates from 0 to that number over 1.2s with an ease-out curve when it enters view,
- * keeping any suffix. Screen readers get the final value; reduced motion shows it as-is.
+ * keeping any suffix. Screen readers get the final value; under reduced motion the final
+ * figure is shown without animating (unless ?motion=on forced full motion).
  */
-const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+import { prefersReduced } from './env.js';
 
 function prepareCount(el) {
   // An explicit target wins; otherwise read it from the visible text.
@@ -43,10 +44,11 @@ function runCount(el) {
 }
 
 export function initCounters() {
-  const els = [...document.querySelectorAll('[data-count]')];
+  // The stats band owns its own count-up (motion/impact.js); don't double-handle it.
+  const els = [...document.querySelectorAll('[data-count]')].filter((el) => !el.closest('[data-impact]'));
   if (!els.length) return;
   // Reduced motion / no observer: leave the final figure in place.
-  if (reduceMotion.matches || !('IntersectionObserver' in window)) return;
+  if (prefersReduced() || !('IntersectionObserver' in window)) return;
 
   const prepared = els.filter(prepareCount);
   if (!prepared.length) return;
